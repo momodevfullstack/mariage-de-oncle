@@ -1,81 +1,49 @@
-
-import React, { useState, useEffect } from 'react';
-import { WEDDING_DATA } from '../constants';
+import React from 'react';
 
 export const Hero: React.FC = () => {
-  const [timeLeft, setTimeLeft] = useState<{days: number, hours: number, minutes: number, seconds: number}>({
-    days: 0, hours: 0, minutes: 0, seconds: 0
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const target = new Date(WEDDING_DATA.date).getTime();
-      const now = new Date().getTime();
-      const distance = target - now;
-
-      if (distance < 0) {
-        clearInterval(timer);
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000)
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
-    <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <img 
-          src="https://picsum.photos/id/111/1920/1080" 
-          alt="Wedding backdrop" 
-          className="w-full h-full object-cover brightness-50"
-        />
-      </div>
-      
-      <div className="relative z-10 text-center px-4">
-        <h2 className="text-white font-cursive text-4xl md:text-6xl mb-4 animate-fade-in">Nous nous marions</h2>
-        <h1 className="text-white font-serif text-6xl md:text-9xl mb-8 tracking-wider">
-          {WEDDING_DATA.groom} <span className="text-amber-400">&</span> {WEDDING_DATA.bride}
-        </h1>
+    <section id="home" className="relative min-h-screen flex items-center justify-center pt-20 px-4 md:px-20 bg-[#FDFCFB]">
+      <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
-        <div className="flex justify-center space-x-4 md:space-x-8 text-white">
-          <div className="flex flex-col items-center">
-            <span className="text-3xl md:text-5xl font-serif">{timeLeft.days}</span>
-            <span className="text-xs md:text-sm uppercase tracking-widest opacity-80">Jours</span>
+        {/* Partie Gauche : Image type "Fine Art" */}
+        <div className="lg:col-span-5 relative order-2 lg:order-1">
+          <div className="relative z-10 overflow-hidden shadow-sm">
+             <img 
+               src="../assets/image5.jpeg" 
+               alt="Guy-morel & Olive" 
+               className="w-full h-[500px] md:h-[700px] object-cover"
+             />
           </div>
-          <div className="text-3xl md:text-5xl font-serif self-start">:</div>
-          <div className="flex flex-col items-center">
-            <span className="text-3xl md:text-5xl font-serif">{timeLeft.hours}</span>
-            <span className="text-xs md:text-sm uppercase tracking-widest opacity-80">Heures</span>
+          <div className="absolute -bottom-6 -left-6 w-full h-full border border-[#D1C7BD] -z-10"></div>
+        </div>
+
+        {/* Partie Droite : Texte Éditorial */}
+        <div className="lg:col-span-7 lg:pl-16 order-1 lg:order-2 space-y-8">
+          <div className="space-y-2">
+            <h2 className="text-sm uppercase tracking-[0.5em] text-[#A69382] font-sans">
+              Wedding Celebration
+            </h2>
+            <h1 className="text-6xl md:text-8xl lg:text-[100px] leading-tight font-light text-[#2C2C2C]">
+              CAPTURE STORIES <br />
+              <span className="font-cursive italic text-5xl md:text-7xl lowercase tracking-normal text-[#A69382] -mt-4 block">
+                that last a lifetime
+              </span>
+            </h1>
           </div>
-          <div className="text-3xl md:text-5xl font-serif self-start">:</div>
-          <div className="flex flex-col items-center">
-            <span className="text-3xl md:text-5xl font-serif">{timeLeft.minutes}</span>
-            <span className="text-xs md:text-sm uppercase tracking-widest opacity-80">Minutes</span>
+
+          <div className="max-w-md space-y-6">
+            <p className="leading-relaxed text-[#6B6B6B] font-sans text-sm md:text-base">
+              Bienvenue dans l'univers de Mr Guy-morel & Madame Olive. 
+              Le 14 Février 2025, nous écrirons un nouveau chapitre de notre histoire 
+              sous le soleil de la Côte d'Ivoire.
+            </p>
+            <div className="pt-4">
+              <a href="#rsvp" className="px-10 py-4 border border-[#4A4A4A] hover:bg-[#4A4A4A] hover:text-white transition-all duration-500 uppercase tracking-widest text-[10px] inline-block">
+                Confirmer ma présence
+              </a>
+            </div>
           </div>
         </div>
-        
-        <div className="mt-12">
-          <a 
-            href="#rsvp" 
-            className="inline-block px-10 py-4 bg-amber-700 text-white rounded-full font-medium hover:bg-amber-800 transition-all transform hover:scale-105"
-          >
-            Confirmer ma présence
-          </a>
-        </div>
-      </div>
-      
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
       </div>
     </section>
   );
