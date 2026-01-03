@@ -1,26 +1,51 @@
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-// import { StorySection } from './components/StorySection'; // Ton nouveau design asymétrique
+
 import { RSVPForm } from './components/RSVPForm';
 import { AdminPanel } from './components/AdminPanel';
-// import { LoginModal } from './components/LoginModal';
+import { LoginModal } from './components/LoginModal';
 
 const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // --- RENDU CONDITIONNEL : PAGE ADMIN UNIQUE ---
+  if (isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-stone-50 font-sans">
+        {/* Barre de contrôle Admin */}
+        <nav className="bg-white border-b border-stone-200 py-4 px-8 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+          <div className="flex items-center space-x-2">
+            <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+            <span className="font-serif italic text-xl text-stone-800 font-bold">G&O Admin</span>
+          </div>
+          <button 
+            onClick={() => setIsLoggedIn(false)}
+            className="px-6 py-2 bg-stone-100 hover:bg-red-50 hover:text-red-600 text-stone-600 rounded-full text-xs font-bold uppercase tracking-widest transition-all"
+          >
+            Quitter la session ×
+          </button>
+        </nav>
+        
+        <main className="p-4 md:p-8 animate-in fade-in duration-500">
+          <AdminPanel isLoggedIn={isLoggedIn} />
+        </main>
+      </div>
+    );
+  }
+
+  // --- RENDU CONDITIONNEL : SITE PUBLIC ---
   return (
     <div className="min-h-screen bg-[#FDFCFB] selection:bg-amber-100 selection:text-amber-900">
-      {/* Navbar avec déclencheur Modal */}
       <Navbar onAdminClick={() => setIsModalOpen(true)} />
       
       <main>
         {/* --- HERO SECTION (Design Éditorial) --- */}
         <Hero />
 
-        {/* --- NOTRE HISTOIRE (Design Asymétrique) --- */}
-        {/* <StorySection /> */}
+     {/* L'AdminPanel reçoit l'état de connexion */}
+     {/* <AdminPanel isLoggedIn={isLoggedIn} /> */}
 
         {/* --- À PROPOS DE NOUS --- */}
         <section id="about" className="py-32 px-4 bg-white">
@@ -132,7 +157,7 @@ const App: React.FC = () => {
         <section id="contact" className="py-32 px-4 bg-white relative">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
             <div className="rounded-[2.5rem] overflow-hidden h-[450px] shadow-2xl grayscale hover:grayscale-0 transition-all">
-              <iframe src="https://www.google.com/maps/embed?pb=YOUR_ABIDJAN_MAP_LINK" className="w-full h-full border-0" allowFullScreen loading="lazy"></iframe>
+              <iframe src="https://maps.app.goo.gl/2FBNSSuHL4rpF1756" className="w-full h-full border-0" allowFullScreen loading="lazy"></iframe>
             </div>
             <div className="flex flex-col justify-center space-y-8">
               <h2 className="font-serif text-4xl text-stone-800 uppercase tracking-tighter">Où Nous Retrouver</h2>
@@ -153,16 +178,15 @@ const App: React.FC = () => {
 
         <RSVPForm />
         
-        {/* Affichage Admin Panel après Login */}
-        {isLoggedIn && <AdminPanel />}
+       
       </main>
 
       {/* --- POPUPS --- */}
-      {/* <LoginModal 
+      <LoginModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onLoginSuccess={() => setIsLoggedIn(true)} 
-      /> */}
+      />
 
       {/* --- FOOTER --- */}
       <footer className="py-12 bg-stone-50 border-t border-stone-200 text-center">

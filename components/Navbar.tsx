@@ -1,34 +1,47 @@
-
 import React, { useState } from 'react';
 import { NAVIGATION } from '../constants';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onAdminClick: () => void; // Fonction passée par le parent pour ouvrir le modal
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onAdminClick }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-stone-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           <div className="flex-shrink-0">
-            <span className="font-cursive text-3xl text-amber-700">M & M</span>
+            {/* Logo mis à jour pour Guy-Morel & Olive */}
+            <span className="font-serif italic text-2xl text-stone-800 tracking-tighter uppercase font-bold text-amber-700">G & O</span>
           </div>
+          
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
+            <div className="ml-10 flex items-center space-x-8">
               {NAVIGATION.map((item) => (
-                <a
+                <button
                   key={item.name}
-                  href={item.href}
-                  className="text-stone-600 hover:text-amber-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  onClick={() => {
+                    if (item.name === 'Admin') {
+                      onAdminClick(); // Déclenche le pop-up
+                    } else {
+                      window.location.href = item.href; // Navigation normale
+                    }
+                  }}
+                  className="text-stone-500 hover:text-amber-700 px-3 py-2 text-sm font-medium transition-colors uppercase tracking-widest"
                 >
                   {item.name}
-                </a>
+                </button>
               ))}
             </div>
           </div>
+
+          {/* Bouton Mobile */}
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-stone-600 hover:text-amber-700"
+              className="inline-flex items-center justify-center p-2 rounded-md text-stone-600"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isOpen ? (
@@ -42,18 +55,25 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
+      {/* Menu Mobile */}
       {isOpen && (
-        <div className="md:hidden bg-white border-t border-stone-100">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className="md:hidden bg-white border-t border-stone-100 p-4">
+          <div className="space-y-2">
             {NAVIGATION.map((item) => (
-              <a
+              <button
                 key={item.name}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className="text-stone-600 hover:text-amber-700 block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => {
+                  setIsOpen(false);
+                  if (item.name === 'Admin') {
+                    onAdminClick();
+                  } else {
+                    window.location.href = item.href;
+                  }
+                }}
+                className="text-stone-600 hover:text-amber-700 block w-full text-left px-3 py-2 rounded-md text-base font-medium uppercase tracking-wider"
               >
                 {item.name}
-              </a>
+              </button>
             ))}
           </div>
         </div>
