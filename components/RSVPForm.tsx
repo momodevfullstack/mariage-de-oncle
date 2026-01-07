@@ -1,6 +1,7 @@
-
 import React, { useState } from 'react';
-import { geminiService } from '../services/geminiService';
+import { PDFDownloadLink } from '@react-pdf/renderer'; // Import nécessaire pour le PDF
+import { PersonalizedInvitationCard } from './PersonalizedInvitationCard';
+import { InvitationPDF } from './InvitationPDF'; // Assurez-vous que ce fichier est créé
 
 export const RSVPForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -11,170 +12,132 @@ export const RSVPForm: React.FC = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  const handleGenerateMessage = async () => {
-    if (!formData.name) {
-      alert("Veuillez entrer votre nom d'abord !");
-      return;
-    }
-    setIsGenerating(true);
-    const msg = await geminiService.generateCongratulationMessage(formData.name);
-    setFormData(prev => ({ ...prev, message: msg }));
-    setIsGenerating(false);
-  };
+  const [guestData, setGuestData] = useState<any>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
+    // Simuler un appel API et enregistrer dans localStorage
     setTimeout(() => {
       const existing = JSON.parse(localStorage.getItem('wedding_guests') || '[]');
       const newGuest = {
         ...formData,
-        id: Date.now().toString(),
+        id: "GO-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
         invitedAt: new Date().toISOString()
       };
       localStorage.setItem('wedding_guests', JSON.stringify([...existing, newGuest]));
       
+      setGuestData(newGuest); 
       setIsSubmitting(false);
       setSubmitted(true);
     }, 1500);
   };
 
-  if (submitted) {
+  // --- RENDU CONDITIONNEL : CARTE D'INVITATION & TÉLÉCHARGEMENT PDF ---
+  if (submitted && guestData) {
     return (
-      <div className="text-center p-8 bg-white rounded-2xl shadow-xl max-w-lg mx-auto border border-stone-100">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+      <section id="rsvp" className="py-24 bg-[#FDFBF9]">
+        <div className="max-w-4xl mx-auto flex flex-col items-center">
+          
+          {/* 1. Affichage de la carte visuelle sur le site */}
+          <PersonalizedInvitationCard data={guestData} onEdit={() => setSubmitted(false)} />
+          
+         
         </div>
-        <h3 className="font-serif text-3xl mb-4">Merci, {formData.name} !</h3>
-        <p className="text-stone-600">Votre réponse a bien été enregistrée. Nous avons hâte de célébrer ce moment avec vous.</p>
-        <button 
-          onClick={() => setSubmitted(false)}
-          className="mt-8 text-amber-700 font-medium hover:underline"
-        >
-          Modifier ma réponse
-        </button>
-      </div>
+      </section>
     );
   }
 
+  // --- RENDU CONDITIONNEL : FORMULAIRE RSVP ---
   return (
-    <section id="rsvp" className="py-24 bg-stone-100 px-4">
+    <section id="rsvp" className="py-32 bg-[#F9F7F5] px-4 font-sans">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="font-cursive text-4xl text-amber-700 mb-2">RSVP</h2>
-          <h3 className="font-serif text-5xl">Serez-vous des nôtres ?</h3>
-          <p className="text-stone-500 mt-4">Merci de confirmer votre présence avant le 1er Juillet 2025.</p>
+        <div className="text-center mb-16 space-y-4">
+          <h2 className="font-serif italic text-4xl text-[#2C2C2C]">Réponse souhaitée</h2>
+          <p className="text-[#A69382] uppercase tracking-[0.3em] text-[10px] font-bold">Avant le 1er Juillet 2025</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border border-stone-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">Nom Complet</label>
-                <input
-                  required
-                  type="text"
-                  value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Jean Dupont"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">Email</label>
-                <input
-                  required
-                  type="email"
-                  value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
-                  placeholder="jean.dupont@example.com"
-                />
-              </div>
-              <div className="flex items-center space-x-4">
-                <label className="text-stone-700">Je serai :</label>
-                <div className="flex items-center space-x-6">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      checked={formData.status === 'confirmed'}
-                      onChange={() => setFormData({...formData, status: 'confirmed'})}
-                      className="w-4 h-4 text-amber-600 border-stone-300 focus:ring-amber-500"
-                    />
-                    <span>Présent</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      checked={formData.status === 'declined'}
-                      onChange={() => setFormData({...formData, status: 'declined'})}
-                      className="w-4 h-4 text-amber-600 border-stone-300 focus:ring-amber-500"
-                    />
-                    <span>Absent</span>
-                  </label>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="plusOne"
-                  checked={formData.plusOne}
-                  onChange={e => setFormData({...formData, plusOne: e.target.checked})}
-                  className="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
-                />
-                <label htmlFor="plusOne" className="ml-3 text-stone-700 cursor-pointer">J'amène un(e) accompagnant(e)</label>
-              </div>
+        <form onSubmit={handleSubmit} className="bg-white p-10 md:p-16 border border-[#E5DCD3] space-y-10 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="space-y-3">
+              <label className="text-[10px] uppercase tracking-widest text-[#A69382] font-bold">Nom Complet</label>
+              <input
+                required
+                type="text"
+                placeholder="Ex: Mr & Mme Sylla"
+                value={formData.name}
+                onChange={e => setFormData({...formData, name: e.target.value})}
+                className="w-full border-b border-[#E5DCD3] py-2 outline-none focus:border-[#2C2C2C] transition-colors bg-transparent font-serif text-lg text-[#2C2C2C]"
+              />
             </div>
 
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-stone-700">Message aux mariés</label>
-                  <button
-                    type="button"
-                    onClick={handleGenerateMessage}
-                    disabled={isGenerating}
-                    className="text-xs font-semibold text-amber-700 hover:text-amber-800 flex items-center bg-amber-50 px-2 py-1 rounded"
-                  >
-                    {isGenerating ? (
-                      <span className="animate-pulse">Génération...</span>
-                    ) : (
-                      <>
-                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1a1 1 0 112 0v1a1 1 0 11-2 0zM13.536 14.95a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707zM6.464 14.95a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707z" />
-                        </svg>
-                        Aider à écrire
-                      </>
-                    )}
-                  </button>
-                </div>
-                <textarea
-                  rows={6}
-                  value={formData.message}
-                  onChange={e => setFormData({...formData, message: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all resize-none"
-                  placeholder="Laissez-leur un petit mot..."
-                ></textarea>
-              </div>
+            <div className="space-y-3">
+              <label className="text-[10px] uppercase tracking-widest text-[#A69382] font-bold">Email</label>
+              <input
+                required
+                type="email"
+                placeholder="votre@email.com"
+                value={formData.email}
+                onChange={e => setFormData({...formData, email: e.target.value})}
+                className="w-full border-b border-[#E5DCD3] py-2 outline-none focus:border-[#2C2C2C] transition-colors bg-transparent font-serif text-lg text-[#2C2C2C]"
+              />
             </div>
           </div>
 
-          <div className="mt-12 text-center">
-            <button
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+            <div className="flex gap-8">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="status"
+                  checked={formData.status === 'confirmed'}
+                  onChange={() => setFormData({...formData, status: 'confirmed'})}
+                  className="w-4 h-4 accent-[#2C2C2C]"
+                />
+                <span className="text-[11px] uppercase tracking-widest text-[#4A4A4A]">Présent(e)</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="status"
+                  checked={formData.status === 'declined'}
+                  onChange={() => setFormData({...formData, status: 'declined'})}
+                  className="w-4 h-4 accent-[#2C2C2C]"
+                />
+                <span className="text-[11px] uppercase tracking-widest text-[#4A4A4A]">Absent(e)</span>
+              </label>
+            </div>
+
+            <label className="flex items-center gap-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.plusOne}
+                onChange={e => setFormData({...formData, plusOne: e.target.checked})}
+                className="w-4 h-4 accent-[#2C2C2C]"
+              />
+              <span className="text-[11px] uppercase tracking-widest text-[#4A4A4A]">Accompagné(e) (+1)</span>
+            </label>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-[10px] uppercase tracking-widest text-[#A69382] font-bold">Petit mot pour les mariés</label>
+            <textarea
+              rows={3}
+              value={formData.message}
+              onChange={e => setFormData({...formData, message: e.target.value})}
+              className="w-full border border-[#E5DCD3] p-4 outline-none focus:border-[#2C2C2C] transition-colors bg-[#FDFCFB] font-serif"
+            ></textarea>
+          </div>
+
+          <div className="text-center pt-6">
+            <button 
+              type="submit" 
               disabled={isSubmitting}
-              type="submit"
-              className="px-12 py-4 bg-stone-900 text-white rounded-full font-semibold hover:bg-stone-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              className="px-16 py-5 bg-[#2C2C2C] text-white text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-[#4A4A4A] transition-all disabled:opacity-30"
             >
-              {isSubmitting ? 'Envoi en cours...' : 'Envoyer ma réponse'}
+              {isSubmitting ? 'Traitement en cours...' : 'Envoyer ma réponse'}
             </button>
           </div>
         </form>

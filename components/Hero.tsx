@@ -9,7 +9,7 @@ export const Hero: React.FC = () => {
         <div className="lg:col-span-5 relative order-2 lg:order-1">
           <div className="relative z-10 overflow-hidden shadow-sm">
              <img 
-               src="../assets/image5.jpeg" 
+               src="../assets/principale.jpg" 
                alt="Guy-morel & Olive" 
                className="w-full h-[500px] md:h-[700px] object-cover"
              />
