@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { authAPI } from '../services/api';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -7,71 +8,83 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
-  // État pour stocker les 6 chiffres du code
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [error, setError] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Réinitialiser le code si le modal se ferme
+  // Réinitialiser le formulaire si le modal se ferme
   useEffect(() => {
     if (!isOpen) {
-      setCode(['', '', '', '', '', '']);
-      setError(false);
+      setEmail('');
+      setPassword('');
+      setError(null);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleChange = (value: string, index: number) => {
-    if (isNaN(Number(value))) return; // N'accepte que les chiffres
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-    const newCode = [...code];
-    newCode[index] = value.substring(value.length - 1);
-    setCode(newCode);
-    setError(false);
-
-    // Déplacement automatique vers la case suivante
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`digit-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-    // Retour arrière pour effacer et revenir à la case précédente
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      const prevInput = document.getElementById(`digit-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
-  const handleLogin = () => {
-    if (code.join('') === '140225') {
+    try {
+      await authAPI.login({ email, password });
       onLoginSuccess();
       onClose();
-    } else {
-      setError(true);
-      setCode(['', '', '', '', '', '']);
+    } catch (err: any) {
+      setError(err.message || 'Email ou mot de passe incorrect');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-md p-10 rounded-[40px] shadow-2xl text-center relative">
+      <div className="bg-white w-full max-w-md p-10 rounded-[40px] shadow-2xl relative">
         <button onClick={onClose} className="absolute top-6 right-6 text-stone-300 hover:text-stone-800 text-2xl">✕</button>
-        <h2 className="font-serif text-3xl mb-8">Accès Admin</h2>
-        <div className="flex justify-center gap-2 mb-8">
-          {code.map((digit, i) => (
+        <h2 className="font-serif text-3xl mb-8 text-center">Accès Admin</h2>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-[#A69382] font-bold mb-2">
+              Email
+            </label>
             <input
-              key={i} id={`digit-${i}`} type="text" maxLength={1} value={digit}
-              onChange={(e) => handleChange(e.target.value, i)}
-              className="w-12 h-16 text-center text-2xl border-2 rounded-xl focus:border-amber-500 outline-none transition-all"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full border-b border-[#E5DCD3] py-2 outline-none focus:border-[#2C2C2C] transition-colors bg-transparent font-sans"
+              placeholder="admin@wedding.com"
             />
-          ))}
-        </div>
-        {error && <p className="text-red-500 text-xs font-bold mb-4 uppercase">Code Incorrect</p>}
-        <button onClick={handleLogin} className="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-amber-800 transition-all">
-          Accéder à la gestion
-        </button>
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-[#A69382] font-bold mb-2">
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full border-b border-[#E5DCD3] py-2 outline-none focus:border-[#2C2C2C] transition-colors bg-transparent font-sans"
+              placeholder="••••••••"
+            />
+          </div>
+          {error && (
+            <p className="text-red-500 text-xs font-bold uppercase text-center">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-stone-900 text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-amber-800 transition-all disabled:opacity-50"
+          >
+            {isLoading ? 'Connexion...' : 'Accéder à la gestion'}
+          </button>
+        </form>
       </div>
     </div>
   );

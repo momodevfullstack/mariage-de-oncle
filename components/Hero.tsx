@@ -7,11 +7,20 @@ export const Hero: React.FC = () => {
         
         {/* Partie Gauche : Image type "Fine Art" */}
         <div className="lg:col-span-5 relative order-2 lg:order-1">
-          <div className="relative z-10 overflow-hidden shadow-sm">
+          <div className="relative z-10 shadow-sm bg-[#FDFCFB]">
              <img 
                src="../assets/principale.jpg" 
                alt="Guy-morel & Olive" 
-               className="w-full h-[500px] md:h-[700px] object-cover"
+               className="w-full h-auto"
+               style={{ 
+                 maxHeight: '700px',
+                 width: '100%',
+                 height: 'auto',
+                 objectFit: 'contain',
+                 objectPosition: 'center top',
+                 display: 'block'
+               }}
+               loading="eager"
              />
           </div>
           <div className="absolute -bottom-6 -left-6 w-full h-full border border-[#D1C7BD] -z-10"></div>
@@ -33,8 +42,8 @@ export const Hero: React.FC = () => {
 
           <div className="max-w-md space-y-6">
             <p className="leading-relaxed text-[#6B6B6B] font-sans text-sm md:text-base">
-              Bienvenue dans l'univers de Mr Guy-morel & Madame Olive. 
-              Le 14 Février 2025, nous écrirons un nouveau chapitre de notre histoire 
+              Bienvenue dans l'univers de  Guy-morel &  Olive. 
+              Le 13 Février 2026, nous écrirons un nouveau chapitre de notre histoire 
               sous le soleil de la Côte d'Ivoire.
             </p>
             <div className="pt-4">

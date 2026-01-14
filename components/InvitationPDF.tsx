@@ -40,8 +40,8 @@ export const InvitationPDF = ({ data }: { data: any }) => (
 
         <View style={styles.section}>
           <Text style={styles.label}>Date & Lieu</Text>
-          <Text style={styles.value}>14 Février 2025 • Abidjan</Text>
-          <Text style={{ fontSize: 10, marginTop: 5 }}>Villa Benezia, Treichville</Text>
+          <Text style={styles.value}>13 Février 2026 • Abidjan</Text>
+          <Text style={{ fontSize: 10, marginTop: 5 }}>Résidence Hôtel HELMA, Angré château</Text>
         </View>
 
         {/* QR Code dynamique */}

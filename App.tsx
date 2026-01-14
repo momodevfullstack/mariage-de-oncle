@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-
 import { RSVPForm } from './components/RSVPForm';
 import { AdminPanel } from './components/AdminPanel';
 import { LoginModal } from './components/LoginModal';
+import { authAPI } from './services/api';
 
 // --- COMPOSANT ANIMATION PÉTALES ---
 const RosePetals = () => {
@@ -59,7 +59,12 @@ const RosePetals = () => {
 
 const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(authAPI.isAuthenticated());
+
+  // Vérifier l'authentification au chargement
+  useEffect(() => {
+    setIsLoggedIn(authAPI.isAuthenticated());
+  }, []);
 
   // --- RENDU CONDITIONNEL : PAGE ADMIN UNIQUE ---
   if (isLoggedIn) {
@@ -72,7 +77,10 @@ const App: React.FC = () => {
             <span className="font-serif italic text-xl text-stone-800 font-bold">G&O Admin</span>
           </div>
           <button 
-            onClick={() => setIsLoggedIn(false)}
+            onClick={() => {
+              authAPI.logout();
+              setIsLoggedIn(false);
+            }}
             className="px-6 py-2 bg-stone-100 hover:bg-red-50 hover:text-red-600 text-stone-600 rounded-full text-xs font-bold uppercase tracking-widest transition-all"
           >
             Quitter la session ×
@@ -113,7 +121,12 @@ const App: React.FC = () => {
               {/* BLOC olive (Photo à gauche, Texte à droite) */}
               <div className="flex flex-row items-center gap-6">
                 <div className="w-1/2 aspect-[4/5] rounded-t-full overflow-hidden shadow-xl border-[10px] border-white flex-shrink-0">
-                  <img src="assets/perso_olive.jpeg" alt="Guy-morel" className="w-full h-full object-cover" />
+                  <img 
+                    src="assets/perso_olive.jpeg" 
+                    alt="Olive" 
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: '50% 20%' }}
+                  />
                 </div>
                 <div className="w-1/2 space-y-3">
                   <p className="font-cursive text-3xl text-amber-700 italic"> Olive</p>
@@ -128,7 +141,12 @@ const App: React.FC = () => {
               {/* BLOC Guy-morel (Photo à gauche, Texte à droite) */}
               <div className="flex flex-row items-center gap-6">
                 <div className="w-1/2 aspect-[4/5] rounded-t-full overflow-hidden shadow-xl border-[10px] border-white flex-shrink-0">
-                  <img src="assets/guy_le_mari.jpeg" alt="Olive" className="w-full h-full object-cover" />
+                  <img 
+                    src="assets/guy_morel.jpeg" 
+                    alt="Guy-morel" 
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: '50% 20%' }}
+                  />
                 </div>
                 <div className="w-1/2 space-y-3">
                   <p className="font-cursive text-3xl text-amber-700 italic">Guy-morel</p>
@@ -171,7 +189,7 @@ const App: React.FC = () => {
                   
                   {/* LIEN LOCALISATION 1 */}
                   <a 
-                    href="https://maps.google.com/?q=VOTRE_ADRESSE_CEREMONIE" 
+                    href="https://maps.app.goo.gl/SGeNsdA9h6RCvWDA9?g_st=awb" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-amber-700 hover:text-amber-800 font-sans text-xs font-bold uppercase tracking-widest transition-colors duration-300"
@@ -196,7 +214,7 @@ const App: React.FC = () => {
                   
                   {/* LIEN LOCALISATION 2 */}
                   <a 
-                    href="https://maps.app.goo.gl/uVUxS6FCSQbYqFHN9" 
+                    href="https://www.google.com/maps/place/Fondation+%C3%89vang%C3%A9lique+Internationale/@5.4166705,-3.9891104,17z/data=!4m6!3m5!1s0xfc1956c349c7089:0xff231221f17769e6!8m2!3d5.4166765!4d-3.989116!16s%2Fg%2F11trn7_2jb?hl=fr&entry=ttu&g_ep=EgoyMDI2MDEwNy4wIKXMDSoASAFQAw%3D%3D" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-amber-700 hover:text-amber-800 font-sans text-xs font-bold uppercase tracking-widest transition-colors duration-300"
@@ -221,7 +239,7 @@ const App: React.FC = () => {
                   
                   {/* LIEN LOCALISATION 3 */}
                   <a 
-                    href="https://maps.google.com/?q=VOTRE_ADRESSE_DINER" 
+                    href="https://maps.app.goo.gl/VEsvZvzdR2c3TCnz9" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-amber-700 hover:text-amber-800 font-sans text-xs font-bold uppercase tracking-widest transition-colors duration-300"
@@ -248,32 +266,26 @@ const App: React.FC = () => {
               
               {/* Image Longue */}
               <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[3/5]" src="../assets/image1.jpeg" alt="Moment 1" />
+                <img className="rounded-2xl w-full object-cover aspect-[3/5]" src="../assets/image_mariage.jpeg" alt="Moment 1" />
               </div>
 
-              {/* Image Courte (Carrée) */}
-              <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-square" src="../assets/image5.jpeg" alt="Moment 2" />
-              </div>
+             
 
               {/* Image Standard */}
               <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[4/5]" src="../assets/image3.jpeg" alt="Moment 3" />
+                <img className="rounded-2xl w-full object-cover aspect-[4/5]" src="../assets/image5.jpeg" alt="Moment 3" />
               </div>
 
               {/* Image Très Longue */}
               <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[2/3]" src="../assets/image4.jpeg" alt="Moment 4" />
+                <img className="rounded-2xl w-full object-cover aspect-[2/3]" src="../assets/macdo.jpeg" alt="Moment 4" />
               </div>
 
-              {/* Image Paysage (Plus courte) */}
-              <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[16/9]" src="../assets/image3.jpeg" alt="Moment 5" />
-              </div>
+             
 
               {/* Image Standard */}
               <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[4/5]" src="../assets/image4.jpeg" alt="Moment 6" />
+                <img className="rounded-2xl w-full object-cover aspect-[4/5]" src="../assets/mariage.jpeg" alt="Moment 6" />
               </div>
 
             </div>
@@ -321,7 +333,7 @@ const App: React.FC = () => {
       <footer className="py-12 bg-stone-50 border-t border-stone-200 text-center">
         <div className="max-w-7xl mx-auto px-4">
           <p className="font-serif italic text-3xl text-amber-700 mb-2">Guy-morel & Olive</p>
-          <p className="text-stone-400 text-[10px] tracking-[0.5em] uppercase font-bold font-sans">14 Février 2025 • Côte d'Ivoire</p>
+          <p className="text-stone-400 text-[10px] tracking-[0.5em] uppercase font-bold font-sans">13 Février 2026 • Côte d'Ivoire</p>
         </div>
       </footer>
     </div>

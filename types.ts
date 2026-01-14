@@ -1,12 +1,15 @@
 
 export interface Guest {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
   status: 'pending' | 'confirmed' | 'declined';
   plusOne: boolean;
   message?: string;
   invitedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface WeddingInfo {

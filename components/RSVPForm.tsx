@@ -1,38 +1,35 @@
 import React, { useState } from 'react';
-import { PDFDownloadLink } from '@react-pdf/renderer'; // Import nécessaire pour le PDF
 import { PersonalizedInvitationCard } from './PersonalizedInvitationCard';
-import { InvitationPDF } from './InvitationPDF'; // Assurez-vous que ce fichier est créé
+import { guestAPI } from '../services/api';
 
 export const RSVPForm: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    status: 'confirmed',
+    status: 'confirmed' as 'confirmed' | 'declined',
     plusOne: false,
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [guestData, setGuestData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
-    // Simuler un appel API et enregistrer dans localStorage
-    setTimeout(() => {
-      const existing = JSON.parse(localStorage.getItem('wedding_guests') || '[]');
-      const newGuest = {
-        ...formData,
-        id: "GO-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
-        invitedAt: new Date().toISOString()
-      };
-      localStorage.setItem('wedding_guests', JSON.stringify([...existing, newGuest]));
-      
-      setGuestData(newGuest); 
-      setIsSubmitting(false);
+    try {
+      const response = await guestAPI.create(formData);
+      setGuestData(response.data);
       setSubmitted(true);
-    }, 1500);
+    } catch (err: any) {
+      console.error('Erreur lors de la soumission:', err);
+      setError(err.message || 'Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // --- RENDU CONDITIONNEL : CARTE D'INVITATION & TÉLÉCHARGEMENT PDF ---
@@ -56,10 +53,15 @@ export const RSVPForm: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16 space-y-4">
           <h2 className="font-serif italic text-4xl text-[#2C2C2C]">Réponse souhaitée</h2>
-          <p className="text-[#A69382] uppercase tracking-[0.3em] text-[10px] font-bold">Avant le 1er Juillet 2025</p>
+          <p className="text-[#A69382] uppercase tracking-[0.3em] text-[10px] font-bold">Avant le 8 Février 2026</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white p-10 md:p-16 border border-[#E5DCD3] space-y-10 shadow-sm">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-3">
               <label className="text-[10px] uppercase tracking-widest text-[#A69382] font-bold">Nom Complet</label>
