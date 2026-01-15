@@ -122,7 +122,7 @@ const App: React.FC = () => {
               <div className="flex flex-row items-center gap-6">
                 <div className="w-1/2 aspect-[4/5] rounded-t-full overflow-hidden shadow-xl border-[10px] border-white flex-shrink-0">
                   <img 
-                    src="assets/perso_olive.jpeg" 
+                    src="/assets/perso_olive.jpeg" 
                     alt="Olive" 
                     className="w-full h-full object-cover"
                     style={{ objectPosition: '50% 20%' }}
@@ -142,7 +142,7 @@ const App: React.FC = () => {
               <div className="flex flex-row items-center gap-6">
                 <div className="w-1/2 aspect-[4/5] rounded-t-full overflow-hidden shadow-xl border-[10px] border-white flex-shrink-0">
                   <img 
-                    src="assets/guy_morel.jpeg" 
+                    src="/assets/guy_morel.jpeg" 
                     alt="Guy-morel" 
                     className="w-full h-full object-cover"
                     style={{ objectPosition: '50% 20%' }}
@@ -203,7 +203,7 @@ const App: React.FC = () => {
               {/* Étape 2 */}
               <div className="group md:mt-12 flex flex-col items-center">
                 <div className="relative overflow-hidden rounded-2xl aspect-[3/4] mb-6 shadow-xl w-full">
-                  <img src="assets/mariage-catholique.jpg" alt="Cocktail" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src="/assets/mariage-catholique.jpg" alt="Cocktail" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute top-4 left-4">
                     <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold tracking-widest uppercase font-sans">18:00</span>
                   </div>
@@ -266,26 +266,26 @@ const App: React.FC = () => {
               
               {/* Image Longue */}
               <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[3/5]" src="../assets/image_mariage.jpeg" alt="Moment 1" />
+                <img className="rounded-2xl w-full object-cover aspect-[3/5]" src="/assets/image_mariage.jpeg" alt="Moment 1" />
               </div>
 
              
 
               {/* Image Standard */}
               <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[4/5]" src="../assets/image5.jpeg" alt="Moment 3" />
+                <img className="rounded-2xl w-full object-cover aspect-[4/5]" src="/assets/image5.jpeg" alt="Moment 3" />
               </div>
 
               {/* Image Très Longue */}
               <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[2/3]" src="../assets/macdo.jpeg" alt="Moment 4" />
+                <img className="rounded-2xl w-full object-cover aspect-[2/3]" src="/assets/macdo.jpeg" alt="Moment 4" />
               </div>
 
              
 
               {/* Image Standard */}
               <div className="break-inside-avoid shadow-md hover:scale-[1.02] transition-all duration-500">
-                <img className="rounded-2xl w-full object-cover aspect-[4/5]" src="../assets/mariage.jpeg" alt="Moment 6" />
+                <img className="rounded-2xl w-full object-cover aspect-[4/5]" src="/assets/mariage.jpeg" alt="Moment 6" />
               </div>
 
             </div>
@@ -309,7 +309,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className="w-10 h-10 rounded-full bg-[#F9F7F5] flex items-center justify-center text-amber-700">📞</span>
-                  <p className="text-stone-600 text-sm tracking-wide">+225 XX XX XX XX</p>
+                  <p className="text-stone-600 text-sm tracking-wide">+225 07 48 29 87 26</p>
+                  <p className="text-stone-600 text-sm tracking-wide">+225 07 08 73 55 29</p>
                 </div>
               </div>
               <p className="text-sm text-stone-400 italic font-serif">Une question ? Nous sommes à votre écoute.</p>

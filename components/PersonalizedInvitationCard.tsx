@@ -103,7 +103,7 @@ export const PersonalizedInvitationCard: React.FC<PersonalizedInvitationCardProp
         style={{ borderRadius: '4px' }}
       >
         <img 
-          src="../assets/CARTE INVITATION DE MARIAGE.png" 
+          src="/assets/CARTE INVITATION DE MARIAGE.png" 
           alt="Carte d'Invitation de Mariage" 
           className="w-full h-auto max-w-full object-contain"
           style={{ display: 'block' }}
