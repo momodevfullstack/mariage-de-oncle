@@ -137,20 +137,105 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
 
       {/* --- LISTE DES INVITÉS --- */}
       <div className="bg-white rounded-[3rem] shadow-xl shadow-stone-200/50 border border-stone-100 overflow-hidden">
-        <div className="px-10 py-8 border-b border-stone-50 flex justify-between items-center bg-stone-50/30">
-          <h2 className="font-serif text-2xl text-stone-800">Détails des réponses</h2>
+        <div className="px-4 md:px-10 py-6 md:py-8 border-b border-stone-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-stone-50/30">
+          <h2 className="font-serif text-xl md:text-2xl text-stone-800">Détails des réponses</h2>
           <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{guests.length} entrées au total</span>
         </div>
         
-        <div className="overflow-x-auto">
+        {/* VERSION MOBILE - CARTES */}
+        <div className="md:hidden p-4 space-y-4">
+          {isLoading ? (
+            <div className="py-20 text-center text-stone-400 font-serif italic text-xl">
+              Chargement des données...
+            </div>
+          ) : guests.length === 0 ? (
+            <div className="py-20 text-center text-stone-400 font-serif italic text-xl">
+              Aucune réponse enregistrée pour le moment...
+            </div>
+          ) : (
+            guests.map((guest) => (
+              <div key={guest._id || guest.id || Math.random()} className="bg-stone-50 rounded-2xl p-5 border border-stone-100 space-y-4">
+                {/* Nom et Email */}
+                <div className="border-b border-stone-200 pb-3">
+                  <h3 className="text-stone-800 font-medium text-lg tracking-tight capitalize">{guest.name}</h3>
+                  <p className="text-stone-400 text-xs font-sans mt-1">{guest.email || 'Pas d\'email'}</p>
+                </div>
+
+                {/* Statut */}
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 text-xs uppercase tracking-wider font-bold">Statut</span>
+                  <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                    guest.status === 'confirmed' 
+                      ? 'bg-green-50 text-green-700 border-green-100' 
+                      : 'bg-red-50 text-red-400 border-red-100'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full mr-2 ${guest.status === 'confirmed' ? 'bg-green-500' : 'bg-red-400'}`}></span>
+                    {guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'}
+                  </span>
+                </div>
+
+                {/* Accompagnant */}
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 text-xs uppercase tracking-wider font-bold">Accompagnant</span>
+                  <span className={`text-sm font-sans ${guest.plusOne ? 'text-amber-600 font-bold' : 'text-stone-400'}`}>
+                    {guest.plusOne ? '✓ Avec accompagnant' : '— Seul(e)'}
+                  </span>
+                </div>
+
+                {/* Message */}
+                {guest.message && (
+                  <div className="border-t border-stone-200 pt-3">
+                    <span className="text-stone-500 text-xs uppercase tracking-wider font-bold block mb-2">Message</span>
+                    <p className="text-stone-600 text-sm font-light italic leading-relaxed">
+                      "{guest.message}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Bouton Supprimer */}
+                <div className="pt-3 border-t border-stone-200">
+                  <button
+                    onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
+                    disabled={deletingId === (guest._id || guest.id || '')}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                      deletingId === (guest._id || guest.id || '')
+                        ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                        : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
+                    }`}
+                  >
+                    {deletingId === (guest._id || guest.id || '') ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Suppression...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Supprimer
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* VERSION DESKTOP - TABLEAU */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="text-[#A69382] text-[10px] uppercase tracking-[0.3em] font-bold">
-                <th className="px-10 py-6 font-semibold">Nom complet</th>
-                <th className="px-10 py-6 font-semibold">Statut</th>
-                <th className="px-10 py-6 font-semibold">Accompagnant</th>
-                <th className="px-10 py-6 font-semibold">Message</th>
-                <th className="px-10 py-6 font-semibold text-right">Actions</th>
+                <th className="px-6 lg:px-10 py-6 font-semibold">Nom complet</th>
+                <th className="px-6 lg:px-10 py-6 font-semibold">Statut</th>
+                <th className="px-6 lg:px-10 py-6 font-semibold">Accompagnant</th>
+                <th className="px-6 lg:px-10 py-6 font-semibold">Message</th>
+                <th className="px-6 lg:px-10 py-6 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
@@ -169,13 +254,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
               ) : (
                 guests.map((guest) => (
                   <tr key={guest._id || guest.id || Math.random()} className="hover:bg-stone-50/50 transition-colors group">
-                    <td className="px-10 py-6">
+                    <td className="px-6 lg:px-10 py-6">
                       <div className="flex flex-col">
                         <span className="text-stone-800 font-medium text-lg tracking-tight capitalize">{guest.name}</span>
                         <span className="text-stone-400 text-xs font-sans tracking-tight">{guest.email || 'Pas d\'email'}</span>
                       </div>
                     </td>
-                    <td className="px-10 py-6">
+                    <td className="px-6 lg:px-10 py-6">
                       <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
                         guest.status === 'confirmed' 
                         ? 'bg-green-50 text-green-700 border-green-100' 
@@ -185,17 +270,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                         {guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'}
                       </span>
                     </td>
-                    <td className="px-10 py-6">
+                    <td className="px-6 lg:px-10 py-6">
                       <span className={`text-sm font-sans ${guest.plusOne ? 'text-amber-600 font-bold' : 'text-stone-400'}`}>
                         {guest.plusOne ? '✓ Avec accompagnant' : '— Seul(e)'}
                       </span>
                     </td>
-                    <td className="px-10 py-6">
+                    <td className="px-6 lg:px-10 py-6">
                       <p className="text-stone-500 text-sm font-light italic max-w-xs truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all" title={guest.message}>
                         {guest.message ? `"${guest.message}"` : 'Pas de message'}
                       </p>
                     </td>
-                    <td className="px-10 py-6 text-right">
+                    <td className="px-6 lg:px-10 py-6 text-right">
                       <button
                         onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
                         disabled={deletingId === (guest._id || guest.id || '')}
