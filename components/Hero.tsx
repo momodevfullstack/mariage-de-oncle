@@ -33,7 +33,7 @@ export const Hero: React.FC = () => {
               Célébration de Mariage
             </h2>
             <h1 className="text-6xl md:text-8xl lg:text-[100px] leading-tight font-light text-[#2C2C2C]">
-              CAPTURER DES INSTANTS <br />
+              CAPTUREZ DES INSTANTS <br />
               <span className="font-cursive italic text-5xl md:text-7xl lowercase tracking-normal text-[#A69382] -mt-4 block">
                 qui durent toute une vie
               </span>
@@ -42,7 +42,7 @@ export const Hero: React.FC = () => {
 
           <div className="max-w-md space-y-6">
             <p className="leading-relaxed text-[#6B6B6B] font-sans text-sm md:text-base">
-              Bienvenue dans l'univers de  Guy-morel &  Olive. 
+              Bienvenue dans l'univers de  Olive  & Guy-morel  qui s'unissent pour l'éternité . 
               Le 13 Février 2026, nous écrirons un nouveau chapitre de notre histoire .
             </p>
             <div className="pt-4">

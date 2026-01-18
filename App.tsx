@@ -180,7 +180,7 @@ const App: React.FC = () => {
                 <div className="relative overflow-hidden rounded-2xl aspect-[3/4] mb-6 w-full shadow-lg">
                   <img src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=600" alt="Cérémonie" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute top-4 left-4">
-                    <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold tracking-widest uppercase font-sans">15:00</span>
+                    <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold tracking-widest uppercase font-sans">09:00</span>
                   </div>
                 </div>
                 <div className="text-center px-4 space-y-4">
@@ -205,7 +205,7 @@ const App: React.FC = () => {
                 <div className="relative overflow-hidden rounded-2xl aspect-[3/4] mb-6 shadow-xl w-full">
                   <img src="/assets/mariage-catholique.jpg" alt="Cocktail" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute top-4 left-4">
-                    <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold tracking-widest uppercase font-sans">18:00</span>
+                    <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold tracking-widest uppercase font-sans">11:00</span>
                   </div>
                 </div>
                 <div className="text-center px-4 space-y-4">
@@ -230,7 +230,7 @@ const App: React.FC = () => {
                 <div className="relative overflow-hidden rounded-2xl aspect-[3/4] mb-6 w-full shadow-lg">
                   <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=600" alt="Dîner" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute top-4 left-4">
-                    <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold tracking-widest uppercase font-sans">20:30</span>
+                    <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold tracking-widest uppercase font-sans">13:00</span>
                   </div>
                 </div>
                 <div className="text-center px-4 space-y-4">

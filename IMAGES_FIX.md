@@ -58,3 +58,4 @@ Lorsque vous déployez sur Vercel :
 Le dossier `assets/` original est toujours là. Le dossier `public/assets/` est une copie pour la production. Vous pouvez continuer à travailler avec `assets/` localement, mais en production, Vercel utilisera `public/assets/`.
 
 
+
