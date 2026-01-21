@@ -309,8 +309,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className="w-10 h-10 rounded-full bg-[#F9F7F5] flex items-center justify-center text-amber-700">📞</span>
-                  <p className="text-stone-600 text-sm tracking-wide">+225 07 48 29 87 26</p>
-                  <p className="text-stone-600 text-sm tracking-wide">+225 07 08 73 55 29</p>
+                  <p className="text-stone-600 text-sm tracking-wide">+225 05 74 71 04 52</p>
+                  <p className="text-stone-600 text-sm tracking-wide">+225 07 11 78 16 26</p>
                 </div>
               </div>
               <p className="text-sm text-stone-400 italic font-serif">Une question ? Nous sommes à votre écoute.</p>
