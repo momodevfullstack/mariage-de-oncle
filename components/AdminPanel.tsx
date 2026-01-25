@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Guest } from '../types';
 import { guestAPI } from '../services/api';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface AdminPanelProps { isLoggedIn: boolean; }
 
@@ -69,6 +71,204 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     }
   };
 
+  const handleDownloadCSV = () => {
+    if (guests.length === 0) {
+      alert('Aucune donnée à télécharger');
+      return;
+    }
+
+    // En-têtes CSV
+    const headers = ['Nom', 'Email', 'Statut', 'Accompagnant', 'Nombre de personnes', 'Message', 'Date d\'invitation'];
+    
+    // Convertir les données en lignes CSV
+    const csvRows = [
+      headers.join(','), // En-tête
+      ...guests.map(guest => {
+        const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
+        const accompagnant = guest.plusOne ? 'Oui' : 'Non';
+        const nombrePersonnes = guest.plusOne ? '2' : '1';
+        const message = guest.message ? `"${guest.message.replace(/"/g, '""')}"` : '';
+        const date = guest.invitedAt || guest.createdAt 
+          ? new Date(guest.invitedAt || guest.createdAt || '').toLocaleDateString('fr-FR', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '';
+        
+        return [
+          `"${guest.name.replace(/"/g, '""')}"`,
+          `"${guest.email.replace(/"/g, '""')}"`,
+          `"${status}"`,
+          `"${accompagnant}"`,
+          nombrePersonnes,
+          message,
+          `"${date}"`
+        ].join(',');
+      })
+    ];
+
+    // Créer le contenu CSV
+    const csvContent = csvRows.join('\n');
+    
+    // Créer un Blob avec BOM UTF-8 pour Excel
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Créer un lien de téléchargement
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    
+    // Nom du fichier avec date
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `liste-invites-mariage-${dateStr}.csv`);
+    
+    // Déclencher le téléchargement
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadPDF = () => {
+    if (guests.length === 0) {
+      alert('Aucune donnée à télécharger');
+      return;
+    }
+
+    // Créer un nouveau document PDF
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    
+    // Couleurs
+    const primaryColor = [139, 115, 130]; // #8B7382 (stone-800)
+    const headerColor = [166, 147, 130]; // #A69382
+    const confirmedColor = [34, 197, 94]; // green-500
+    const declinedColor = [248, 113, 113]; // red-400
+    
+    // Titre
+    doc.setFontSize(20);
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Liste des Invités - Mariage Guy-Morel & Olive', 14, 15);
+    
+    // Date de génération
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont('helvetica', 'normal');
+    const dateStr = new Date().toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Généré le ${dateStr}`, 14, 22);
+    
+    // Statistiques
+    doc.setFontSize(11);
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total: ${stats.total} invitations | Confirmés: ${stats.confirmed} personnes | Déclinés: ${stats.declined} personnes`, 14, 30);
+    
+    // Préparer les données du tableau
+    const tableData = guests.map(guest => {
+      const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
+      const accompagnant = guest.plusOne ? 'Oui' : 'Non';
+      const nombrePersonnes = guest.plusOne ? '2' : '1';
+      const message = guest.message ? guest.message.substring(0, 50) + (guest.message.length > 50 ? '...' : '') : '-';
+      const date = guest.invitedAt || guest.createdAt 
+        ? new Date(guest.invitedAt || guest.createdAt || '').toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          })
+        : '-';
+      
+      return [
+        guest.name,
+        guest.email,
+        status,
+        accompagnant,
+        nombrePersonnes,
+        message,
+        date
+      ];
+    });
+    
+    // Créer le tableau avec autoTable
+    (doc as any).autoTable({
+      head: [['Nom', 'Email', 'Statut', 'Accompagnant', 'Nb personnes', 'Message', 'Date']],
+      body: tableData,
+      startY: 35,
+      theme: 'striped',
+      headStyles: {
+        fillColor: headerColor,
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 9
+      },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: [60, 60, 60]
+      },
+      alternateRowStyles: {
+        fillColor: [249, 247, 245] // stone-50
+      },
+      columnStyles: {
+        0: { cellWidth: 35, fontStyle: 'bold' }, // Nom
+        1: { cellWidth: 45 }, // Email
+        2: { cellWidth: 25, halign: 'center' }, // Statut
+        3: { cellWidth: 25, halign: 'center' }, // Accompagnant
+        4: { cellWidth: 20, halign: 'center' }, // Nb personnes
+        5: { cellWidth: 50 }, // Message
+        6: { cellWidth: 25, halign: 'center' } // Date
+      },
+      styles: {
+        cellPadding: 3,
+        overflow: 'linebreak',
+        cellWidth: 'wrap'
+      },
+      didParseCell: (data: any) => {
+        // Colorer les statuts
+        if (data.column.index === 2) { // Colonne Statut
+          if (data.cell.text[0] === 'Confirmé') {
+            data.cell.styles.textColor = confirmedColor;
+            data.cell.styles.fontStyle = 'bold';
+          } else if (data.cell.text[0] === 'Décliné') {
+            data.cell.styles.textColor = declinedColor;
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+        // Mettre en gras les accompagnants
+        if (data.column.index === 3 && data.cell.text[0] === 'Oui') {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.textColor = [217, 119, 6]; // amber-600
+        }
+      }
+    });
+    
+    // Pied de page
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        `Page ${i} sur ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
+    
+    // Télécharger le PDF
+    const dateStrFile = new Date().toISOString().split('T')[0];
+    doc.save(`liste-invites-mariage-${dateStrFile}.pdf`);
+  };
+
   if (!isLoggedIn) return null;
 
   const confirmedCount = stats.confirmed;
@@ -83,7 +283,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
           <h1 className="font-serif text-4xl text-stone-800 italic">Tableau de bord</h1>
           <p className="text-stone-400 text-sm mt-2 font-sans uppercase tracking-[0.2em]">Gestion des convives — Guy-Morel & Olive</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap">
+           <button 
+             onClick={handleDownloadPDF}
+             disabled={isLoading || guests.length === 0}
+             className="px-6 py-2 bg-red-600 text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+           >
+             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+             </svg>
+             Télécharger PDF
+           </button>
+           <button 
+             onClick={handleDownloadCSV}
+             disabled={isLoading || guests.length === 0}
+             className="px-6 py-2 bg-amber-600 text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+           >
+             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+             </svg>
+             Télécharger CSV
+           </button>
            <button 
              onClick={() => window.print()}
              className="px-6 py-2 border border-stone-200 text-stone-600 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-stone-50 transition-all"
