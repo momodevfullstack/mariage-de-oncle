@@ -142,11 +142,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     // Créer un nouveau document PDF
     const doc = new jsPDF('landscape', 'mm', 'a4');
     
-    // Couleurs
-    const primaryColor = [139, 115, 130]; // #8B7382 (stone-800)
-    const headerColor = [166, 147, 130]; // #A69382
-    const confirmedColor = [34, 197, 94]; // green-500
-    const declinedColor = [248, 113, 113]; // red-400
+    // Couleurs (tuples pour TypeScript)
+    const primaryColor: [number, number, number] = [139, 115, 130]; // #8B7382 (stone-800)
+    const headerColor: [number, number, number] = [166, 147, 130]; // #A69382
+    const confirmedColor: [number, number, number] = [34, 197, 94]; // green-500
+    const declinedColor: [number, number, number] = [248, 113, 113]; // red-400
     
     // Titre
     doc.setFontSize(20);
