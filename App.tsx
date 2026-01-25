@@ -4,6 +4,7 @@ import { Hero } from './components/Hero';
 import { RSVPForm } from './components/RSVPForm';
 import { AdminPanel } from './components/AdminPanel';
 import { LoginModal } from './components/LoginModal';
+import { WhatsAppFloat } from './components/WhatsAppFloat';
 import { authAPI } from './services/api';
 
 // --- COMPOSANT ANIMATION PÉTALES ---
@@ -337,6 +338,12 @@ const App: React.FC = () => {
           <p className="text-stone-400 text-[10px] tracking-[0.5em] uppercase font-bold font-sans">13 Février 2026 • Côte d'Ivoire</p>
         </div>
       </footer>
+
+      {/* Bouton WhatsApp flottant pour marketing */}
+      <WhatsAppFloat 
+        phoneNumber="+33766689696" 
+        message="Bonjour ! Je suis intéressé(e) par vos services de développement web. Pourriez-vous me contacter pour discuter de mon projet ?"
+      />
     </div>
   );
 };
