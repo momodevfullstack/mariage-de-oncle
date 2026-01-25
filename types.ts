@@ -1,4 +1,14 @@
 
+export type GuestRelation = 
+  | 'Collaborateur'
+  | 'Ami'
+  | 'Connaissance'
+  | 'Famille'
+  | 'Patron'
+  | 'Collègue'
+  | 'Pasteur'
+  | 'Frere/soeur eglise';
+
 export interface Guest {
   _id?: string;
   id?: string;
@@ -6,6 +16,7 @@ export interface Guest {
   email: string;
   status: 'pending' | 'confirmed' | 'declined';
   plusOne: boolean;
+  relation?: GuestRelation;
   message?: string;
   invitedAt: string;
   createdAt?: string;

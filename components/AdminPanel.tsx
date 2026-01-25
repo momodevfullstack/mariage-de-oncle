@@ -79,7 +79,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     }
 
     // En-têtes CSV
-    const headers = ['Nom', 'Email', 'Statut', 'Accompagnant', 'Nombre de personnes', 'Message', 'Date d\'invitation'];
+    const headers = ['Nom', 'Email', 'Relation', 'Statut', 'Accompagnant', 'Nombre de personnes', 'Message', 'Date d\'invitation'];
     
     // Convertir les données en lignes CSV
     const csvRows = [
@@ -88,6 +88,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
         const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
         const accompagnant = guest.plusOne ? 'Oui' : 'Non';
         const nombrePersonnes = guest.plusOne ? '2' : '1';
+        const relation = guest.relation || 'Non spécifié';
         const message = guest.message ? `"${guest.message.replace(/"/g, '""')}"` : '';
         const date = guest.invitedAt || guest.createdAt 
           ? new Date(guest.invitedAt || guest.createdAt || '').toLocaleDateString('fr-FR', {
@@ -102,6 +103,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
         return [
           `"${guest.name.replace(/"/g, '""')}"`,
           `"${guest.email.replace(/"/g, '""')}"`,
+          `"${relation}"`,
           `"${status}"`,
           `"${accompagnant}"`,
           nombrePersonnes,
@@ -180,6 +182,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
       const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
       const accompagnant = guest.plusOne ? 'Oui' : 'Non';
       const nombrePersonnes = guest.plusOne ? '2' : '1';
+      const relation = guest.relation || 'Non spécifié';
       const message = guest.message ? guest.message.substring(0, 50) + (guest.message.length > 50 ? '...' : '') : '-';
       const date = guest.invitedAt || guest.createdAt 
         ? new Date(guest.invitedAt || guest.createdAt || '').toLocaleDateString('fr-FR', {
@@ -192,6 +195,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
       return [
         guest.name,
         guest.email,
+        relation,
         status,
         accompagnant,
         nombrePersonnes,
@@ -202,7 +206,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     
     // Créer le tableau avec autoTable
     autoTable(doc, {
-      head: [['Nom', 'Email', 'Statut', 'Accompagnant', 'Nb personnes', 'Message', 'Date']],
+      head: [['Nom', 'Email', 'Relation', 'Statut', 'Accompagnant', 'Nb personnes', 'Message', 'Date']],
       body: tableData,
       startY: 35,
       theme: 'striped',
@@ -220,13 +224,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
         fillColor: [249, 247, 245] // stone-50
       },
       columnStyles: {
-        0: { cellWidth: 35, fontStyle: 'bold' }, // Nom
-        1: { cellWidth: 45 }, // Email
-        2: { cellWidth: 25, halign: 'center' }, // Statut
-        3: { cellWidth: 25, halign: 'center' }, // Accompagnant
-        4: { cellWidth: 20, halign: 'center' }, // Nb personnes
-        5: { cellWidth: 50 }, // Message
-        6: { cellWidth: 25, halign: 'center' } // Date
+        0: { cellWidth: 30, fontStyle: 'bold' }, // Nom
+        1: { cellWidth: 40 }, // Email
+        2: { cellWidth: 30, halign: 'center' }, // Relation
+        3: { cellWidth: 25, halign: 'center' }, // Statut
+        4: { cellWidth: 25, halign: 'center' }, // Accompagnant
+        5: { cellWidth: 20, halign: 'center' }, // Nb personnes
+        6: { cellWidth: 45 }, // Message
+        7: { cellWidth: 25, halign: 'center' } // Date
       },
       styles: {
         cellPadding: 3,
@@ -235,7 +240,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
       },
       didParseCell: (data: any) => {
         // Colorer les statuts
-        if (data.column.index === 2) { // Colonne Statut
+        if (data.column.index === 3) { // Colonne Statut
           if (data.cell.text[0] === 'Confirmé') {
             data.cell.styles.textColor = confirmedColor;
             data.cell.styles.fontStyle = 'bold';
@@ -245,7 +250,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
           }
         }
         // Mettre en gras les accompagnants
-        if (data.column.index === 3 && data.cell.text[0] === 'Oui') {
+        if (data.column.index === 4 && data.cell.text[0] === 'Oui') {
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.textColor = [217, 119, 6]; // amber-600
         }
@@ -402,6 +407,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                   </span>
                 </div>
 
+                {/* Relation */}
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 text-xs uppercase tracking-wider font-bold">Relation</span>
+                  <span className="text-sm font-sans text-stone-700 font-medium">
+                    {guest.relation || 'Non spécifié'}
+                  </span>
+                </div>
+
                 {/* Accompagnant */}
                 <div className="flex items-center justify-between">
                   <span className="text-stone-500 text-xs uppercase tracking-wider font-bold">Accompagnant</span>
@@ -460,6 +473,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
             <thead>
               <tr className="text-[#A69382] text-[10px] uppercase tracking-[0.3em] font-bold">
                 <th className="px-6 lg:px-10 py-6 font-semibold">Nom complet</th>
+                <th className="px-6 lg:px-10 py-6 font-semibold">Relation</th>
                 <th className="px-6 lg:px-10 py-6 font-semibold">Statut</th>
                 <th className="px-6 lg:px-10 py-6 font-semibold">Accompagnant</th>
                 <th className="px-6 lg:px-10 py-6 font-semibold">Message</th>
@@ -469,13 +483,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
             <tbody className="divide-y divide-stone-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-10 py-20 text-center text-stone-400 font-serif italic text-xl">
+                  <td colSpan={6} className="px-10 py-20 text-center text-stone-400 font-serif italic text-xl">
                     Chargement des données...
                   </td>
                 </tr>
               ) : guests.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-10 py-20 text-center text-stone-400 font-serif italic text-xl">
+                  <td colSpan={6} className="px-10 py-20 text-center text-stone-400 font-serif italic text-xl">
                     Aucune réponse enregistrée pour le moment...
                   </td>
                 </tr>
@@ -487,6 +501,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                         <span className="text-stone-800 font-medium text-lg tracking-tight capitalize">{guest.name}</span>
                         <span className="text-stone-400 text-xs font-sans tracking-tight">{guest.email || 'Pas d\'email'}</span>
                       </div>
+                    </td>
+                    <td className="px-6 lg:px-10 py-6">
+                      <span className="text-sm font-sans text-stone-700 font-medium">
+                        {guest.relation || 'Non spécifié'}
+                      </span>
                     </td>
                     <td className="px-6 lg:px-10 py-6">
                       <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${

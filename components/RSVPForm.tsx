@@ -8,6 +8,7 @@ export const RSVPForm: React.FC = () => {
     email: '',
     status: 'confirmed' as 'confirmed' | 'declined',
     plusOne: false,
+    relation: '' as '' | 'Collaborateur' | 'Ami' | 'Connaissance' | 'Famille' | 'Patron' | 'Collègue' | 'Pasteur' | 'Frere/soeur eglise',
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,6 +87,26 @@ export const RSVPForm: React.FC = () => {
                 className="w-full border-b border-[#E5DCD3] py-2 outline-none focus:border-[#2C2C2C] transition-colors bg-transparent font-serif text-lg text-[#2C2C2C]"
               />
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-[10px] uppercase tracking-widest text-[#A69382] font-bold">Votre relation avec les mariés</label>
+            <select
+              required
+              value={formData.relation}
+              onChange={e => setFormData({...formData, relation: e.target.value as any})}
+              className="w-full border-b border-[#E5DCD3] py-2 outline-none focus:border-[#2C2C2C] transition-colors bg-transparent font-serif text-lg text-[#2C2C2C]"
+            >
+              <option value="">Sélectionnez votre relation</option>
+              <option value="Famille">Famille</option>
+              <option value="Ami">Ami</option>
+              <option value="Collègue">Collègue</option>
+              <option value="Collaborateur">Collaborateur</option>
+              <option value="Connaissance">Connaissance</option>
+              <option value="Patron">Patron</option>
+              <option value="Pasteur">Pasteur</option>
+              <option value="Frere/soeur eglise">Frère/sœur église</option>
+            </select>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
