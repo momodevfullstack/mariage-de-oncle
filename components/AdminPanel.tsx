@@ -5,6 +5,13 @@ import { DeleteConfirmModal } from './DeleteConfirmModal';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+// Extension de type pour autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
 interface AdminPanelProps { isLoggedIn: boolean; }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
@@ -139,6 +146,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
       return;
     }
 
+    try {
     // Créer un nouveau document PDF
     const doc = new jsPDF('landscape', 'mm', 'a4');
     
@@ -199,7 +207,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     });
     
     // Créer le tableau avec autoTable
-    (doc as any).autoTable({
+    doc.autoTable({
       head: [['Nom', 'Email', 'Statut', 'Accompagnant', 'Nb personnes', 'Message', 'Date']],
       body: tableData,
       startY: 35,
@@ -267,6 +275,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     // Télécharger le PDF
     const dateStrFile = new Date().toISOString().split('T')[0];
     doc.save(`liste-invites-mariage-${dateStrFile}.pdf`);
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      alert('Une erreur est survenue lors de la génération du PDF. Veuillez réessayer.');
+    }
   };
 
   if (!isLoggedIn) return null;
