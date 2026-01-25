@@ -3,14 +3,8 @@ import { Guest } from '../types';
 import { guestAPI } from '../services/api';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-// Extension de type pour autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
+// @ts-ignore
+import autoTable from 'jspdf-autotable';
 
 interface AdminPanelProps { isLoggedIn: boolean; }
 
@@ -207,7 +201,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     });
     
     // Créer le tableau avec autoTable
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Nom', 'Email', 'Statut', 'Accompagnant', 'Nb personnes', 'Message', 'Date']],
       body: tableData,
       startY: 35,
@@ -275,9 +269,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     // Télécharger le PDF
     const dateStrFile = new Date().toISOString().split('T')[0];
     doc.save(`liste-invites-mariage-${dateStrFile}.pdf`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la génération du PDF:', error);
-      alert('Une erreur est survenue lors de la génération du PDF. Veuillez réessayer.');
+      const errorMessage = error?.message || 'Erreur inconnue';
+      console.error('Détails de l\'erreur:', errorMessage, error);
+      alert(`Erreur lors de la génération du PDF: ${errorMessage}\n\nVérifiez la console pour plus de détails.`);
     }
   };
 
