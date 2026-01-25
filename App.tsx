@@ -209,8 +209,8 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-center px-4 space-y-4">
-                  <h4 className="font-serif text-2xl text-stone-800 italic">Cérémonie religieuse</h4>
-                  <p className="text-stone-500 text-sm leading-relaxed font-sans font-light">Rafraîchissements et bouchées gourmandes sous le soleil de Côte d'Ivoire.</p>
+                  <h4 className="font-serif text-2xl text-stone-800 italic">Union devant Dieu</h4>
+                  <p className="text-stone-500 text-sm leading-relaxed font-sans font-light">Un moment de partage autour de rafraîchissements et bouchées gourmandes pour célébrer notre union.</p>
                   
                   {/* LIEN LOCALISATION 2 */}
                   <a 
