@@ -91,7 +91,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     
     setUpdatingGuest(true);
     try {
-      await guestAPI.update(editModal.guest._id || editModal.guest.id || '', updatedData);
+      // Préparer les données : convertir relation vide en undefined
+      const dataToSend: any = { ...updatedData };
+      if (dataToSend.relation === '' || dataToSend.relation === null) {
+        dataToSend.relation = undefined;
+      }
+      
+      await guestAPI.update(editModal.guest._id || editModal.guest.id || '', dataToSend);
       await loadData();
       closeEditModal();
     } catch (err: any) {
