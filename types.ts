@@ -17,6 +17,7 @@ export interface Guest {
   status: 'pending' | 'confirmed' | 'declined';
   plusOne: boolean;
   relation?: GuestRelation;
+  table?: number | null;
   message?: string;
   invitedAt: string;
   createdAt?: string;

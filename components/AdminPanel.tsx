@@ -14,6 +14,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingTableId, setUpdatingTableId] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; guestId: string; guestName: string }>({
     isOpen: false,
     guestId: '',
@@ -72,6 +73,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     }
   };
 
+  const handleTableChange = async (guestId: string, tableNumber: number | null) => {
+    setUpdatingTableId(guestId);
+    try {
+      await guestAPI.update(guestId, { table: tableNumber });
+      // Recharger les données après mise à jour
+      await loadData();
+    } catch (err: any) {
+      console.error('Erreur mise à jour table:', err);
+      alert(err.message || 'Erreur lors de la mise à jour de la table');
+    } finally {
+      setUpdatingTableId(null);
+    }
+  };
+
+  // Regrouper les invités par table
+  const groupedGuests = React.useMemo(() => {
+    const grouped: { [key: number]: Guest[] } = {};
+    const noTable: Guest[] = [];
+
+    guests.forEach(guest => {
+      if (guest.table && guest.table >= 1 && guest.table <= 14) {
+        if (!grouped[guest.table]) {
+          grouped[guest.table] = [];
+        }
+        grouped[guest.table].push(guest);
+      } else {
+        noTable.push(guest);
+      }
+    });
+
+    // Trier les tables
+    const sortedTables = Object.keys(grouped)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map(tableNum => ({ table: tableNum, guests: grouped[tableNum] }));
+
+    return { tables: sortedTables, noTable };
+  }, [guests]);
+
   const handleDownloadCSV = () => {
     if (guests.length === 0) {
       alert('Aucune donnée à télécharger');
@@ -79,16 +119,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     }
 
     // En-têtes CSV
-    const headers = ['Nom', 'Email', 'Relation', 'Statut', 'Accompagnant', 'Nombre de personnes', 'Message', 'Date d\'invitation'];
+    const headers = ['Table', 'Nom', 'Email', 'Relation', 'Statut', 'Accompagnant', 'Nombre de personnes', 'Message', 'Date d\'invitation'];
+    
+    // Organiser par table
+    const sortedGuests = [...guests].sort((a, b) => {
+      if (a.table && b.table) return a.table - b.table;
+      if (a.table) return -1;
+      if (b.table) return 1;
+      return 0;
+    });
     
     // Convertir les données en lignes CSV
     const csvRows = [
       headers.join(','), // En-tête
-      ...guests.map(guest => {
+      ...sortedGuests.map(guest => {
         const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
         const accompagnant = guest.plusOne ? 'Oui' : 'Non';
         const nombrePersonnes = guest.plusOne ? '2' : '1';
         const relation = guest.relation || 'Non spécifié';
+        const table = guest.table ? `Table ${guest.table}` : 'Non assigné';
         const message = guest.message ? `"${guest.message.replace(/"/g, '""')}"` : '';
         const date = guest.invitedAt || guest.createdAt 
           ? new Date(guest.invitedAt || guest.createdAt || '').toLocaleDateString('fr-FR', {
@@ -101,6 +150,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
           : '';
         
         return [
+          `"${table}"`,
           `"${guest.name.replace(/"/g, '""')}"`,
           `"${guest.email.replace(/"/g, '""')}"`,
           `"${relation}"`,
@@ -177,85 +227,152 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     doc.setFont('helvetica', 'bold');
     doc.text(`Total: ${stats.total} invitations | Confirmés: ${stats.confirmed} personnes | Déclinés: ${stats.declined} personnes`, 14, 30);
     
-    // Préparer les données du tableau
-    const tableData = guests.map(guest => {
-      const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
-      const accompagnant = guest.plusOne ? 'Oui' : 'Non';
-      const nombrePersonnes = guest.plusOne ? '2' : '1';
-      const relation = guest.relation || 'Non spécifié';
-      const message = guest.message ? guest.message.substring(0, 50) + (guest.message.length > 50 ? '...' : '') : '-';
-      const date = guest.invitedAt || guest.createdAt 
-        ? new Date(guest.invitedAt || guest.createdAt || '').toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          })
-        : '-';
-      
-      return [
-        guest.name,
-        guest.email,
-        relation,
-        status,
-        accompagnant,
-        nombrePersonnes,
-        message,
-        date
-      ];
-    });
+    let startY = 40;
     
-    // Créer le tableau avec autoTable
-    autoTable(doc, {
-      head: [['Nom', 'Email', 'Relation', 'Statut', 'Accompagnant', 'Nb personnes', 'Message', 'Date']],
-      body: tableData,
-      startY: 35,
-      theme: 'striped',
-      headStyles: {
-        fillColor: headerColor,
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        fontSize: 9
-      },
-      bodyStyles: {
-        fontSize: 8,
-        textColor: [60, 60, 60]
-      },
-      alternateRowStyles: {
-        fillColor: [249, 247, 245] // stone-50
-      },
-      columnStyles: {
-        0: { cellWidth: 30, fontStyle: 'bold' }, // Nom
-        1: { cellWidth: 40 }, // Email
-        2: { cellWidth: 30, halign: 'center' }, // Relation
-        3: { cellWidth: 25, halign: 'center' }, // Statut
-        4: { cellWidth: 25, halign: 'center' }, // Accompagnant
-        5: { cellWidth: 20, halign: 'center' }, // Nb personnes
-        6: { cellWidth: 45 }, // Message
-        7: { cellWidth: 25, halign: 'center' } // Date
-      },
-      styles: {
-        cellPadding: 3,
-        overflow: 'linebreak',
-        cellWidth: 'wrap'
-      },
-      didParseCell: (data: any) => {
-        // Colorer les statuts
-        if (data.column.index === 3) { // Colonne Statut
-          if (data.cell.text[0] === 'Confirmé') {
-            data.cell.styles.textColor = confirmedColor;
-            data.cell.styles.fontStyle = 'bold';
-          } else if (data.cell.text[0] === 'Décliné') {
-            data.cell.styles.textColor = declinedColor;
-            data.cell.styles.fontStyle = 'bold';
+    // Organiser par table
+    const sortedTables = groupedGuests.tables;
+    const noTableGuests = groupedGuests.noTable;
+    
+    // Afficher chaque table
+    sortedTables.forEach(({ table, guests: tableGuests }) => {
+      // Titre de la table
+      doc.setFontSize(14);
+      doc.setTextColor(...primaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`TABLE ${table} (${tableGuests.length}/7)`, 14, startY);
+      startY += 8;
+      
+      // Préparer les données du tableau pour cette table
+      const tableData = tableGuests.map(guest => {
+        const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
+        const accompagnant = guest.plusOne ? 'Oui' : 'Non';
+        const nombrePersonnes = guest.plusOne ? '2' : '1';
+        const relation = guest.relation || 'Non spécifié';
+        const message = guest.message ? guest.message.substring(0, 40) + (guest.message.length > 40 ? '...' : '') : '-';
+        
+        return [
+          guest.name,
+          relation,
+          status,
+          accompagnant,
+          nombrePersonnes,
+          message
+        ];
+      });
+      
+      // Créer le tableau avec autoTable
+      autoTable(doc, {
+        head: [['Nom', 'Relation', 'Statut', 'Accompagnant', 'Nb personnes', 'Message']],
+        body: tableData,
+        startY: startY,
+        theme: 'striped',
+        headStyles: {
+          fillColor: headerColor,
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 8
+        },
+        bodyStyles: {
+          fontSize: 7,
+          textColor: [60, 60, 60],
+          fillColor: [249, 247, 245] // Gris pour les lignes avec table
+        },
+        alternateRowStyles: {
+          fillColor: [249, 247, 245]
+        },
+        columnStyles: {
+          0: { cellWidth: 50, fontStyle: 'bold' }, // Nom
+          1: { cellWidth: 35, halign: 'center' }, // Relation
+          2: { cellWidth: 25, halign: 'center' }, // Statut
+          3: { cellWidth: 25, halign: 'center' }, // Accompagnant
+          4: { cellWidth: 20, halign: 'center' }, // Nb personnes
+          5: { cellWidth: 50 } // Message
+        },
+        styles: {
+          cellPadding: 2,
+          overflow: 'linebreak',
+          cellWidth: 'wrap'
+        },
+        didParseCell: (data: any) => {
+          // Colorer les statuts
+          if (data.column.index === 2) { // Colonne Statut
+            if (data.cell.text[0] === 'Confirmé') {
+              data.cell.styles.textColor = confirmedColor;
+              data.cell.styles.fontStyle = 'bold';
+            } else if (data.cell.text[0] === 'Décliné') {
+              data.cell.styles.textColor = declinedColor;
+              data.cell.styles.fontStyle = 'bold';
+            }
           }
         }
-        // Mettre en gras les accompagnants
-        if (data.column.index === 4 && data.cell.text[0] === 'Oui') {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.textColor = [217, 119, 6]; // amber-600
-        }
+      });
+      
+      // Obtenir la position Y après le tableau
+      const finalY = (doc as any).lastAutoTable.finalY || startY + 20;
+      startY = finalY + 10;
+      
+      // Nouvelle page si nécessaire
+      if (startY > 180) {
+        doc.addPage();
+        startY = 20;
       }
     });
+    
+    // Afficher les invités sans table
+    if (noTableGuests.length > 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`SANS TABLE ASSIGNÉE (${noTableGuests.length})`, 14, startY);
+      startY += 8;
+      
+      const noTableData = noTableGuests.map(guest => {
+        const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
+        const accompagnant = guest.plusOne ? 'Oui' : 'Non';
+        const nombrePersonnes = guest.plusOne ? '2' : '1';
+        const relation = guest.relation || 'Non spécifié';
+        const message = guest.message ? guest.message.substring(0, 40) + (guest.message.length > 40 ? '...' : '') : '-';
+        
+        return [
+          guest.name,
+          relation,
+          status,
+          accompagnant,
+          nombrePersonnes,
+          message
+        ];
+      });
+      
+      autoTable(doc, {
+        head: [['Nom', 'Relation', 'Statut', 'Accompagnant', 'Nb personnes', 'Message']],
+        body: noTableData,
+        startY: startY,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [150, 150, 150],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 8
+        },
+        bodyStyles: {
+          fontSize: 7,
+          textColor: [60, 60, 60]
+        },
+        columnStyles: {
+          0: { cellWidth: 50, fontStyle: 'bold' },
+          1: { cellWidth: 35, halign: 'center' },
+          2: { cellWidth: 25, halign: 'center' },
+          3: { cellWidth: 25, halign: 'center' },
+          4: { cellWidth: 20, halign: 'center' },
+          5: { cellWidth: 50 }
+        },
+        styles: {
+          cellPadding: 2,
+          overflow: 'linebreak',
+          cellWidth: 'wrap'
+        }
+      });
+    }
     
     // Pied de page
     const pageCount = (doc as any).internal.getNumberOfPages();
@@ -387,7 +504,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
             </div>
           ) : (
             guests.map((guest) => (
-              <div key={guest._id || guest.id || Math.random()} className="bg-stone-50 rounded-2xl p-5 border border-stone-100 space-y-4">
+              <div 
+                key={guest._id || guest.id || Math.random()} 
+                className={`rounded-2xl p-5 border space-y-4 ${
+                  guest.table 
+                    ? 'bg-stone-200 border-stone-300' 
+                    : 'bg-stone-50 border-stone-100'
+                }`}
+              >
                 {/* Nom et Email */}
                 <div className="border-b border-stone-200 pb-3">
                   <h3 className="text-stone-800 font-medium text-lg tracking-tight capitalize">{guest.name}</h3>
@@ -405,6 +529,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                     <span className={`w-1.5 h-1.5 rounded-full mr-2 ${guest.status === 'confirmed' ? 'bg-green-500' : 'bg-red-400'}`}></span>
                     {guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'}
                   </span>
+                </div>
+
+                {/* Table */}
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 text-xs uppercase tracking-wider font-bold">Table</span>
+                  <select
+                    value={guest.table || ''}
+                    onChange={(e) => handleTableChange(guest._id || guest.id || '', e.target.value ? parseInt(e.target.value) : null)}
+                    disabled={updatingTableId === (guest._id || guest.id || '')}
+                    className={`px-3 py-1.5 text-sm border border-stone-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 ${guest.table ? 'bg-amber-50 border-amber-300 font-bold' : ''}`}
+                  >
+                    <option value="">Non assigné</option>
+                    {Array.from({ length: 14 }, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num}>Table {num}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Relation */}
@@ -467,100 +607,229 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
           )}
         </div>
 
-        {/* VERSION DESKTOP - TABLEAU */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-[#A69382] text-[10px] uppercase tracking-[0.3em] font-bold">
-                <th className="px-6 lg:px-10 py-6 font-semibold">Nom complet</th>
-                <th className="px-6 lg:px-10 py-6 font-semibold">Relation</th>
-                <th className="px-6 lg:px-10 py-6 font-semibold">Statut</th>
-                <th className="px-6 lg:px-10 py-6 font-semibold">Accompagnant</th>
-                <th className="px-6 lg:px-10 py-6 font-semibold">Message</th>
-                <th className="px-6 lg:px-10 py-6 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-50">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-10 py-20 text-center text-stone-400 font-serif italic text-xl">
-                    Chargement des données...
-                  </td>
-                </tr>
-              ) : guests.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-10 py-20 text-center text-stone-400 font-serif italic text-xl">
-                    Aucune réponse enregistrée pour le moment...
-                  </td>
-                </tr>
-              ) : (
-                guests.map((guest) => (
-                  <tr key={guest._id || guest.id || Math.random()} className="hover:bg-stone-50/50 transition-colors group">
-                    <td className="px-6 lg:px-10 py-6">
-                      <div className="flex flex-col">
-                        <span className="text-stone-800 font-medium text-lg tracking-tight capitalize">{guest.name}</span>
-                        <span className="text-stone-400 text-xs font-sans tracking-tight">{guest.email || 'Pas d\'email'}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 lg:px-10 py-6">
-                      <span className="text-sm font-sans text-stone-700 font-medium">
-                        {guest.relation || 'Non spécifié'}
-                      </span>
-                    </td>
-                    <td className="px-6 lg:px-10 py-6">
-                      <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                        guest.status === 'confirmed' 
-                        ? 'bg-green-50 text-green-700 border-green-100' 
-                        : 'bg-red-50 text-red-400 border-red-100'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full mr-2 ${guest.status === 'confirmed' ? 'bg-green-500' : 'bg-red-400'}`}></span>
-                        {guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'}
-                      </span>
-                    </td>
-                    <td className="px-6 lg:px-10 py-6">
-                      <span className={`text-sm font-sans ${guest.plusOne ? 'text-amber-600 font-bold' : 'text-stone-400'}`}>
-                        {guest.plusOne ? '✓ Avec accompagnant' : '— Seul(e)'}
-                      </span>
-                    </td>
-                    <td className="px-6 lg:px-10 py-6">
-                      <p className="text-stone-500 text-sm font-light italic max-w-xs truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all" title={guest.message}>
-                        {guest.message ? `"${guest.message}"` : 'Pas de message'}
-                      </p>
-                    </td>
-                    <td className="px-6 lg:px-10 py-6 text-right">
-                      <button
-                        onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
-                        disabled={deletingId === (guest._id || guest.id || '')}
-                        className={`ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
-                          deletingId === (guest._id || guest.id || '')
-                            ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
-                            : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
-                        }`}
-                        title="Supprimer cet invité"
-                      >
-                        {deletingId === (guest._id || guest.id || '') ? (
-                          <>
-                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Suppression...
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Supprimer
-                          </>
-                        )}
-                      </button>
-                    </td>
+        {/* VERSION DESKTOP - TABLEAU GROUPÉ PAR TABLE */}
+        <div className="hidden md:block overflow-x-auto space-y-8">
+          {/* Afficher les tables assignées */}
+          {groupedGuests.tables.map(({ table, guests: tableGuests }) => (
+            <div key={table} className="mb-8">
+              <div className="bg-amber-50 border-l-4 border-amber-600 px-4 py-2 mb-2">
+                <h3 className="font-serif text-lg text-stone-800 font-bold">Table {table} ({tableGuests.length}/7)</h3>
+              </div>
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-[#A69382] text-[10px] uppercase tracking-[0.3em] font-bold">
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Table</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Nom complet</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Relation</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Statut</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Accompagnant</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Message</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold text-right">Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-stone-50">
+                  {tableGuests.map((guest) => (
+                    <tr 
+                      key={guest._id || guest.id || Math.random()} 
+                      className="bg-stone-100/50 hover:bg-stone-200/50 transition-colors group"
+                    >
+                      <td className="px-6 lg:px-10 py-4">
+                        <select
+                          value={guest.table || ''}
+                          onChange={(e) => handleTableChange(guest._id || guest.id || '', e.target.value ? parseInt(e.target.value) : null)}
+                          disabled={updatingTableId === (guest._id || guest.id || '')}
+                          className="w-20 px-2 py-1 text-sm border border-stone-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+                        >
+                          <option value="">-</option>
+                          {Array.from({ length: 14 }, (_, i) => i + 1).map(num => (
+                            <option key={num} value={num}>Table {num}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-6 lg:px-10 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-stone-800 font-medium text-lg tracking-tight capitalize">{guest.name}</span>
+                          <span className="text-stone-400 text-xs font-sans tracking-tight">{guest.email || 'Pas d\'email'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 lg:px-10 py-4">
+                        <span className="text-sm font-sans text-stone-700 font-medium">
+                          {guest.relation || 'Non spécifié'}
+                        </span>
+                      </td>
+                      <td className="px-6 lg:px-10 py-4">
+                        <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                          guest.status === 'confirmed' 
+                          ? 'bg-green-50 text-green-700 border-green-100' 
+                          : 'bg-red-50 text-red-400 border-red-100'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full mr-2 ${guest.status === 'confirmed' ? 'bg-green-500' : 'bg-red-400'}`}></span>
+                          {guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'}
+                        </span>
+                      </td>
+                      <td className="px-6 lg:px-10 py-4">
+                        <span className={`text-sm font-sans ${guest.plusOne ? 'text-amber-600 font-bold' : 'text-stone-400'}`}>
+                          {guest.plusOne ? '✓ Avec accompagnant' : '— Seul(e)'}
+                        </span>
+                      </td>
+                      <td className="px-6 lg:px-10 py-4">
+                        <p className="text-stone-500 text-sm font-light italic max-w-xs truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all" title={guest.message}>
+                          {guest.message ? `"${guest.message}"` : 'Pas de message'}
+                        </p>
+                      </td>
+                      <td className="px-6 lg:px-10 py-4 text-right">
+                        <button
+                          onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
+                          disabled={deletingId === (guest._id || guest.id || '')}
+                          className={`ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                            deletingId === (guest._id || guest.id || '')
+                              ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                              : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
+                          }`}
+                          title="Supprimer cet invité"
+                        >
+                          {deletingId === (guest._id || guest.id || '') ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Suppression...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Supprimer
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+
+          {/* Afficher les invités sans table */}
+          {groupedGuests.noTable.length > 0 && (
+            <div className="mb-8">
+              <div className="bg-stone-100 border-l-4 border-stone-400 px-4 py-2 mb-2">
+                <h3 className="font-serif text-lg text-stone-800 font-bold">Sans table assignée ({groupedGuests.noTable.length})</h3>
+              </div>
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-[#A69382] text-[10px] uppercase tracking-[0.3em] font-bold">
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Table</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Nom complet</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Relation</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Statut</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Accompagnant</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold">Message</th>
+                    <th className="px-6 lg:px-10 py-4 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-50">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="px-10 py-20 text-center text-stone-400 font-serif italic text-xl">
+                        Chargement des données...
+                      </td>
+                    </tr>
+                  ) : (
+                    groupedGuests.noTable.map((guest) => (
+                      <tr 
+                        key={guest._id || guest.id || Math.random()} 
+                        className="hover:bg-stone-50/50 transition-colors group"
+                      >
+                        <td className="px-6 lg:px-10 py-4">
+                          <select
+                            value={guest.table || ''}
+                            onChange={(e) => handleTableChange(guest._id || guest.id || '', e.target.value ? parseInt(e.target.value) : null)}
+                            disabled={updatingTableId === (guest._id || guest.id || '')}
+                            className="w-20 px-2 py-1 text-sm border border-stone-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+                          >
+                            <option value="">-</option>
+                            {Array.from({ length: 14 }, (_, i) => i + 1).map(num => (
+                              <option key={num} value={num}>Table {num}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-6 lg:px-10 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-stone-800 font-medium text-lg tracking-tight capitalize">{guest.name}</span>
+                            <span className="text-stone-400 text-xs font-sans tracking-tight">{guest.email || 'Pas d\'email'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 lg:px-10 py-4">
+                          <span className="text-sm font-sans text-stone-700 font-medium">
+                            {guest.relation || 'Non spécifié'}
+                          </span>
+                        </td>
+                        <td className="px-6 lg:px-10 py-4">
+                          <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                            guest.status === 'confirmed' 
+                            ? 'bg-green-50 text-green-700 border-green-100' 
+                            : 'bg-red-50 text-red-400 border-red-100'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full mr-2 ${guest.status === 'confirmed' ? 'bg-green-500' : 'bg-red-400'}`}></span>
+                            {guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'}
+                          </span>
+                        </td>
+                        <td className="px-6 lg:px-10 py-4">
+                          <span className={`text-sm font-sans ${guest.plusOne ? 'text-amber-600 font-bold' : 'text-stone-400'}`}>
+                            {guest.plusOne ? '✓ Avec accompagnant' : '— Seul(e)'}
+                          </span>
+                        </td>
+                        <td className="px-6 lg:px-10 py-4">
+                          <p className="text-stone-500 text-sm font-light italic max-w-xs truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all" title={guest.message}>
+                            {guest.message ? `"${guest.message}"` : 'Pas de message'}
+                          </p>
+                        </td>
+                        <td className="px-6 lg:px-10 py-4 text-right">
+                          <button
+                            onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
+                            disabled={deletingId === (guest._id || guest.id || '')}
+                            className={`ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                              deletingId === (guest._id || guest.id || '')
+                                ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                                : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
+                            }`}
+                            title="Supprimer cet invité"
+                          >
+                            {deletingId === (guest._id || guest.id || '') ? (
+                              <>
+                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Suppression...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Supprimer
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {!isLoading && guests.length === 0 && (
+            <div className="px-10 py-20 text-center text-stone-400 font-serif italic text-xl">
+              Aucune réponse enregistrée pour le moment...
+            </div>
+          )}
         </div>
       </div>
 

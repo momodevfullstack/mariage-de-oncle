@@ -8,6 +8,7 @@ interface Guest {
   email: string;
   status: 'pending' | 'confirmed' | 'declined';
   plusOne: boolean;
+  table?: number | null;
   message?: string;
   invitedAt?: string;
 }
@@ -76,7 +77,7 @@ export const guestAPI = {
   },
 
   // Mettre à jour un invité (Admin)
-  update: async (id: string, guestData: Partial<Guest>): Promise<{ success: boolean; data: Guest }> => {
+  update: async (id: string, guestData: Partial<Guest & { table?: number | null }>): Promise<{ success: boolean; data: Guest }> => {
     return fetchAPI(`/guests/${id}`, {
       method: 'PUT',
       body: JSON.stringify(guestData),
