@@ -20,6 +20,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     guestId: '',
     guestName: ''
   });
+  const [editModal, setEditModal] = useState<{ isOpen: boolean; guest: Guest | null }>({
+    isOpen: false,
+    guest: null
+  });
+  const [updatingGuest, setUpdatingGuest] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -70,6 +75,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
       console.error('Erreur suppression:', err);
       alert(err.message || 'Erreur lors de la suppression de l\'invité');
       setDeletingId(null);
+    }
+  };
+
+  const openEditModal = (guest: Guest) => {
+    setEditModal({ isOpen: true, guest });
+  };
+
+  const closeEditModal = () => {
+    setEditModal({ isOpen: false, guest: null });
+  };
+
+  const handleUpdateGuest = async (updatedData: Partial<Guest>) => {
+    if (!editModal.guest || !editModal.guest._id && !editModal.guest.id) return;
+    
+    setUpdatingGuest(true);
+    try {
+      await guestAPI.update(editModal.guest._id || editModal.guest.id || '', updatedData);
+      await loadData();
+      closeEditModal();
+    } catch (err: any) {
+      console.error('Erreur mise à jour:', err);
+      alert(err.message || 'Erreur lors de la mise à jour de l\'invité');
+    } finally {
+      setUpdatingGuest(false);
     }
   };
 
@@ -573,12 +602,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                   </div>
                 )}
 
-                {/* Bouton Supprimer */}
-                <div className="pt-3 border-t border-stone-200">
+                {/* Boutons Actions */}
+                <div className="pt-3 border-t border-stone-200 flex gap-2">
+                  <button
+                    onClick={() => openEditModal(guest)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 border border-amber-200"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Modifier
+                  </button>
                   <button
                     onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
                     disabled={deletingId === (guest._id || guest.id || '')}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
                       deletingId === (guest._id || guest.id || '')
                         ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
                         : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
@@ -678,33 +716,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                         </p>
                       </td>
                       <td className="px-6 lg:px-10 py-4 text-right">
-                        <button
-                          onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
-                          disabled={deletingId === (guest._id || guest.id || '')}
-                          className={`ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
-                            deletingId === (guest._id || guest.id || '')
-                              ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
-                              : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
-                          }`}
-                          title="Supprimer cet invité"
-                        >
-                          {deletingId === (guest._id || guest.id || '') ? (
-                            <>
-                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Suppression...
-                            </>
-                          ) : (
-                            <>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                              Supprimer
-                            </>
-                          )}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openEditModal(guest)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 border border-amber-200"
+                            title="Modifier cet invité"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
+                            disabled={deletingId === (guest._id || guest.id || '')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                              deletingId === (guest._id || guest.id || '')
+                                ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                                : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
+                            }`}
+                            title="Supprimer cet invité"
+                          >
+                            {deletingId === (guest._id || guest.id || '') ? (
+                              <>
+                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Suppression...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Supprimer
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -789,33 +839,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                           </p>
                         </td>
                         <td className="px-6 lg:px-10 py-4 text-right">
-                          <button
-                            onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
-                            disabled={deletingId === (guest._id || guest.id || '')}
-                            className={`ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
-                              deletingId === (guest._id || guest.id || '')
-                                ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
-                                : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
-                            }`}
-                            title="Supprimer cet invité"
-                          >
-                            {deletingId === (guest._id || guest.id || '') ? (
-                              <>
-                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Suppression...
-                              </>
-                            ) : (
-                              <>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Supprimer
-                              </>
-                            )}
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => openEditModal(guest)}
+                              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 border border-amber-200"
+                              title="Modifier cet invité"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              Modifier
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(guest._id || guest.id || '', guest.name)}
+                              disabled={deletingId === (guest._id || guest.id || '')}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                                deletingId === (guest._id || guest.id || '')
+                                  ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                                  : 'bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200'
+                              }`}
+                              title="Supprimer cet invité"
+                            >
+                              {deletingId === (guest._id || guest.id || '') ? (
+                                <>
+                                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Suppression...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                  Supprimer
+                                </>
+                              )}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -846,6 +908,170 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
         onCancel={closeDeleteModal}
         isDeleting={deletingId !== null}
       />
+
+      {/* Modal de modification */}
+      {editModal.isOpen && editModal.guest && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-2xl p-8 rounded-[30px] shadow-2xl relative animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+            <h2 className="font-serif text-2xl text-stone-800 text-center mb-6">
+              Modifier l'invité
+            </h2>
+
+            <EditGuestForm
+              guest={editModal.guest}
+              onSave={handleUpdateGuest}
+              onCancel={closeEditModal}
+              isSaving={updatingGuest}
+            />
+          </div>
+        </div>
+      )}
     </div>
+  );
+};
+
+// Composant formulaire de modification
+interface EditGuestFormProps {
+  guest: Guest;
+  onSave: (data: Partial<Guest>) => void;
+  onCancel: () => void;
+  isSaving: boolean;
+}
+
+const EditGuestForm: React.FC<EditGuestFormProps> = ({ guest, onSave, onCancel, isSaving }) => {
+  const [formData, setFormData] = useState({
+    name: guest.name,
+    email: guest.email,
+    status: guest.status,
+    plusOne: guest.plusOne,
+    relation: guest.relation || '',
+    message: guest.message || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-stone-600 font-bold mb-2">
+            Nom complet
+          </label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-stone-600 font-bold mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-stone-600 font-bold mb-2">
+            Statut
+          </label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="pending">En attente</option>
+            <option value="confirmed">Confirmé</option>
+            <option value="declined">Décliné</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-stone-600 font-bold mb-2">
+            Relation
+          </label>
+          <select
+            value={formData.relation}
+            onChange={(e) => setFormData({ ...formData, relation: e.target.value as any })}
+            className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="">Non spécifié</option>
+            <option value="Famille">Famille</option>
+            <option value="Ami">Ami</option>
+            <option value="Collègue">Collègue</option>
+            <option value="Collaborateur">Collaborateur</option>
+            <option value="Connaissance">Connaissance</option>
+            <option value="Patron">Patron</option>
+            <option value="Pasteur">Pasteur</option>
+            <option value="Frere/soeur eglise">Frère/sœur église</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.plusOne}
+            onChange={(e) => setFormData({ ...formData, plusOne: e.target.checked })}
+            className="w-4 h-4 accent-amber-600"
+          />
+          <span className="text-sm text-stone-700 font-medium">Avec accompagnant (+1)</span>
+        </label>
+      </div>
+
+      <div>
+        <label className="block text-xs uppercase tracking-wider text-stone-600 font-bold mb-2">
+          Message
+        </label>
+        <textarea
+          value={formData.message}
+          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+          rows={3}
+          className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+      </div>
+
+      <div className="flex gap-4 pt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSaving}
+          className="flex-1 py-3 px-6 border-2 border-stone-200 text-stone-600 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-stone-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="flex-1 py-3 px-6 bg-amber-600 text-white rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isSaving ? (
+            <>
+              <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Enregistrement...
+            </>
+          ) : (
+            'Enregistrer'
+          )}
+        </button>
+      </div>
+    </form>
   );
 };
