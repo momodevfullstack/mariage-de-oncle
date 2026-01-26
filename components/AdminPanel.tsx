@@ -122,6 +122,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     }
   };
 
+  // Fonction pour calculer le nombre de personnes réelles (avec plusOne)
+  const countPersons = (guestList: Guest[]): number => {
+    return guestList.reduce((total, guest) => {
+      return total + (guest.plusOne ? 2 : 1);
+    }, 0);
+  };
+
   // Regrouper les invités par table
   const groupedGuests = React.useMemo(() => {
     const grouped: { [key: number]: Guest[] } = {};
@@ -138,11 +145,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
       }
     });
 
-    // Trier les tables
+    // Trier les tables et calculer le nombre de personnes
     const sortedTables = Object.keys(grouped)
       .map(Number)
       .sort((a, b) => a - b)
-      .map(tableNum => ({ table: tableNum, guests: grouped[tableNum] }));
+      .map(tableNum => {
+        const tableGuests = grouped[tableNum];
+        return { 
+          table: tableNum, 
+          guests: tableGuests,
+          personCount: countPersons(tableGuests)
+        };
+      });
 
     return { tables: sortedTables, noTable };
   }, [guests]);
@@ -269,12 +283,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     const noTableGuests = groupedGuests.noTable;
     
     // Afficher chaque table
-    sortedTables.forEach(({ table, guests: tableGuests }) => {
+    sortedTables.forEach(({ table, guests: tableGuests, personCount }) => {
       // Titre de la table
       doc.setFontSize(14);
       doc.setTextColor(...primaryColor);
       doc.setFont('helvetica', 'bold');
-      doc.text(`TABLE ${table} (${tableGuests.length}/7)`, 14, startY);
+      doc.text(`TABLE ${table} (${personCount}/7 personnes - ${tableGuests.length} invité${tableGuests.length > 1 ? 's' : ''})`, 14, startY);
       startY += 8;
       
       // Préparer les données du tableau pour cette table
@@ -654,10 +668,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
         {/* VERSION DESKTOP - TABLEAU GROUPÉ PAR TABLE */}
         <div className="hidden md:block overflow-x-auto space-y-8">
           {/* Afficher les tables assignées */}
-          {groupedGuests.tables.map(({ table, guests: tableGuests }) => (
+          {groupedGuests.tables.map(({ table, guests: tableGuests, personCount }) => (
             <div key={table} className="mb-8">
-              <div className="bg-amber-50 border-l-4 border-amber-600 px-4 py-2 mb-2">
-                <h3 className="font-serif text-lg text-stone-800 font-bold">Table {table} ({tableGuests.length}/7)</h3>
+              <div className={`border-l-4 px-4 py-2 mb-2 ${
+                personCount > 7 
+                  ? 'bg-red-50 border-red-600' 
+                  : personCount === 7 
+                    ? 'bg-green-50 border-green-600'
+                    : 'bg-amber-50 border-amber-600'
+              }`}>
+                <h3 className={`font-serif text-lg font-bold ${
+                  personCount > 7 
+                    ? 'text-red-800' 
+                    : personCount === 7 
+                      ? 'text-green-800'
+                      : 'text-stone-800'
+                }`}>
+                  Table {table} ({personCount}/7 personnes) - {tableGuests.length} invité{tableGuests.length > 1 ? 's' : ''}
+                  {personCount > 7 && <span className="ml-2 text-red-600">⚠️ Table pleine !</span>}
+                </h3>
               </div>
               <table className="w-full text-left">
                 <thead>
