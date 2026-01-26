@@ -128,7 +128,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     const noTable: Guest[] = [];
 
     guests.forEach(guest => {
-      if (guest.table && guest.table >= 1 && guest.table <= 14) {
+      if (guest.table && guest.table >= 1 && guest.table <= 22) {
         if (!grouped[guest.table]) {
           grouped[guest.table] = [];
         }
@@ -808,7 +808,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                             className="w-20 px-2 py-1 text-sm border border-stone-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
                           >
                             <option value="">-</option>
-                            {Array.from({ length: 14 }, (_, i) => i + 1).map(num => (
+                            {Array.from({ length: 22 }, (_, i) => i + 1).map(num => (
                               <option key={num} value={num}>Table {num}</option>
                             ))}
                           </select>
