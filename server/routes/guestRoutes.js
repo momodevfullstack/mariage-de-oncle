@@ -37,10 +37,18 @@ router.post('/', async (req, res) => {
     });
 
     // Envoyer l'email d'invitation (en arrière-plan, ne bloque pas la réponse)
-    sendInvitationEmail(guest).catch(err => {
-      console.error('Erreur lors de l\'envoi de l\'email (non bloquant):', err);
-      // L'erreur d'email ne doit pas empêcher la création de l'invité
-    });
+    sendInvitationEmail(guest)
+      .then(result => {
+        if (result.success) {
+          console.log(`✅ Email envoyé avec succès à ${guest.email} (MessageId: ${result.messageId})`);
+        } else {
+          console.error(`❌ Échec envoi email à ${guest.email}:`, result.message || result.error);
+        }
+      })
+      .catch(err => {
+        console.error(`❌ Erreur lors de l'envoi de l'email à ${guest.email} (non bloquant):`, err.message || err);
+        // L'erreur d'email ne doit pas empêcher la création de l'invité
+      });
 
     res.status(201).json({
       success: true,
