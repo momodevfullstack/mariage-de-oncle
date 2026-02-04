@@ -131,26 +131,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
 
   // Regrouper les invités par table
   const groupedGuests = React.useMemo(() => {
+    // Initialiser toutes les 30 tables (même vides)
     const grouped: { [key: number]: Guest[] } = {};
+    for (let i = 1; i <= 30; i++) {
+      grouped[i] = [];
+    }
+    
     const noTable: Guest[] = [];
 
+    // Assigner les invités à leurs tables respectives
     guests.forEach(guest => {
       if (guest.table && guest.table >= 1 && guest.table <= 30) {
-        if (!grouped[guest.table]) {
-          grouped[guest.table] = [];
-        }
         grouped[guest.table].push(guest);
       } else {
         noTable.push(guest);
       }
     });
 
-    // Trier les tables et calculer le nombre de personnes
-    const sortedTables = Object.keys(grouped)
-      .map(Number)
-      .sort((a, b) => a - b)
+    // Créer la liste de toutes les 30 tables avec leurs invités
+    const sortedTables = Array.from({ length: 30 }, (_, i) => i + 1)
       .map(tableNum => {
-        const tableGuests = grouped[tableNum];
+        const tableGuests = grouped[tableNum] || [];
         return { 
           table: tableNum, 
           guests: tableGuests,
@@ -282,7 +283,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     const sortedTables = groupedGuests.tables;
     const noTableGuests = groupedGuests.noTable;
     
-    // Afficher chaque table
+    // Afficher toutes les 30 tables (même vides)
     sortedTables.forEach(({ table, guests: tableGuests, personCount }) => {
       // Titre de la table
       doc.setFontSize(14);
@@ -292,22 +293,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
       startY += 8;
       
       // Préparer les données du tableau pour cette table
-      const tableData = tableGuests.map(guest => {
-        const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
-        const accompagnant = guest.plusOne ? 'Oui' : 'Non';
-        const nombrePersonnes = guest.plusOne ? '2' : '1';
-        const relation = guest.relation || 'Non spécifié';
-        const message = guest.message ? guest.message.substring(0, 40) + (guest.message.length > 40 ? '...' : '') : '-';
-        
-        return [
-          guest.name,
-          relation,
-          status,
-          accompagnant,
-          nombrePersonnes,
-          message
-        ];
-      });
+      const tableData = tableGuests.length > 0 
+        ? tableGuests.map(guest => {
+            const status = guest.status === 'confirmed' ? 'Confirmé' : guest.status === 'declined' ? 'Décliné' : 'En attente';
+            const accompagnant = guest.plusOne ? 'Oui' : 'Non';
+            const nombrePersonnes = guest.plusOne ? '2' : '1';
+            const relation = guest.relation || 'Non spécifié';
+            const message = guest.message ? guest.message.substring(0, 40) + (guest.message.length > 40 ? '...' : '') : '-';
+            
+            return [
+              guest.name,
+              relation,
+              status,
+              accompagnant,
+              nombrePersonnes,
+              message
+            ];
+          })
+        : [['Aucun invité assigné', '-', '-', '-', '-', '-']];
       
       // Créer le tableau avec autoTable
       autoTable(doc, {
@@ -677,27 +680,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
 
         {/* VERSION DESKTOP - TABLEAU GROUPÉ PAR TABLE */}
         <div className="hidden md:block overflow-x-auto space-y-8">
-          {/* Afficher les tables assignées */}
-          {groupedGuests.tables.map(({ table, guests: tableGuests, personCount }) => (
-            <div key={table} className="mb-8">
+          {/* Afficher toutes les 30 tables (même vides) */}
+          {groupedGuests.tables.map(({ table, guests: tableGuests, personCount }) => {
+            const isEmpty = tableGuests.length === 0;
+            return (
+            <div key={table} className={`mb-8 ${isEmpty ? 'opacity-60' : ''}`}>
               <div className={`border-l-4 px-4 py-2 mb-2 ${
-                personCount > 7 
-                  ? 'bg-red-50 border-red-600' 
-                  : personCount === 7 
-                    ? 'bg-green-50 border-green-600'
-                    : 'bg-amber-50 border-amber-600'
+                isEmpty
+                  ? 'bg-stone-50 border-stone-300'
+                  : personCount > 7 
+                    ? 'bg-red-50 border-red-600' 
+                    : personCount === 7 
+                      ? 'bg-green-50 border-green-600'
+                      : 'bg-amber-50 border-amber-600'
               }`}>
                 <h3 className={`font-serif text-lg font-bold ${
-                  personCount > 7 
-                    ? 'text-red-800' 
-                    : personCount === 7 
-                      ? 'text-green-800'
-                      : 'text-stone-800'
+                  isEmpty
+                    ? 'text-stone-500'
+                    : personCount > 7 
+                      ? 'text-red-800' 
+                      : personCount === 7 
+                        ? 'text-green-800'
+                        : 'text-stone-800'
                 }`}>
                   Table {table} ({personCount}/7 personnes) - {tableGuests.length} invité{tableGuests.length > 1 ? 's' : ''}
+                  {isEmpty && <span className="ml-2 text-stone-400 text-sm font-normal italic">(Vide)</span>}
                   {personCount > 7 && <span className="ml-2 text-red-600">⚠️ Table pleine !</span>}
                 </h3>
               </div>
+              {isEmpty ? (
+                <div className="bg-stone-50 border border-stone-200 rounded-lg p-8 text-center">
+                  <p className="text-stone-400 italic text-sm">Aucun invité assigné à cette table</p>
+                </div>
+              ) : (
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-[#A69382] text-[10px] uppercase tracking-[0.3em] font-bold">
@@ -805,8 +820,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                   ))}
                 </tbody>
               </table>
+              )}
             </div>
-          ))}
+            );
+          })}
 
           {/* Afficher les invités sans table */}
           {groupedGuests.noTable.length > 0 && (
