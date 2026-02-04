@@ -135,7 +135,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
     const noTable: Guest[] = [];
 
     guests.forEach(guest => {
-      if (guest.table && guest.table >= 1 && guest.table <= 22) {
+      if (guest.table && guest.table >= 1 && guest.table <= 30) {
         if (!grouped[guest.table]) {
           grouped[guest.table] = [];
         }
@@ -464,6 +464,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
         </div>
         <div className="flex gap-4 flex-wrap">
            <button 
+             onClick={loadData}
+             disabled={isLoading}
+             className="px-6 py-2 bg-blue-600 text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+           >
+             <svg className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+             </svg>
+             {isLoading ? 'Actualisation...' : 'Actualiser'}
+           </button>
+           <button 
              onClick={handleDownloadPDF}
              disabled={isLoading || guests.length === 0}
              className="px-6 py-2 bg-red-600 text-white rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -590,7 +600,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                     className={`px-3 py-1.5 text-sm border border-stone-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 ${guest.table ? 'bg-amber-50 border-amber-300 font-bold' : ''}`}
                   >
                     <option value="">Non assigné</option>
-                    {Array.from({ length: 14 }, (_, i) => i + 1).map(num => (
+                    {Array.from({ length: 30 }, (_, i) => i + 1).map(num => (
                       <option key={num} value={num}>Table {num}</option>
                     ))}
                   </select>
@@ -714,7 +724,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                           className="w-20 px-2 py-1 text-sm border border-stone-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
                         >
                           <option value="">-</option>
-                          {Array.from({ length: 14 }, (_, i) => i + 1).map(num => (
+                          {Array.from({ length: 30 }, (_, i) => i + 1).map(num => (
                             <option key={num} value={num}>Table {num}</option>
                           ))}
                         </select>
