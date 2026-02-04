@@ -680,39 +680,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
 
         {/* VERSION DESKTOP - TABLEAU GROUPÉ PAR TABLE */}
         <div className="hidden md:block overflow-x-auto space-y-8">
-          {/* Afficher toutes les 30 tables (même vides) */}
-          {groupedGuests.tables.map(({ table, guests: tableGuests, personCount }) => {
-            const isEmpty = tableGuests.length === 0;
-            return (
-            <div key={table} className={`mb-8 ${isEmpty ? 'opacity-60' : ''}`}>
+          {/* Afficher uniquement les tables avec des invités */}
+          {groupedGuests.tables
+            .filter(({ guests }) => guests.length > 0)
+            .map(({ table, guests: tableGuests, personCount }) => (
+            <div key={table} className="mb-8">
               <div className={`border-l-4 px-4 py-2 mb-2 ${
-                isEmpty
-                  ? 'bg-stone-50 border-stone-300'
-                  : personCount > 7 
-                    ? 'bg-red-50 border-red-600' 
-                    : personCount === 7 
-                      ? 'bg-green-50 border-green-600'
-                      : 'bg-amber-50 border-amber-600'
+                personCount > 7 
+                  ? 'bg-red-50 border-red-600' 
+                  : personCount === 7 
+                    ? 'bg-green-50 border-green-600'
+                    : 'bg-amber-50 border-amber-600'
               }`}>
                 <h3 className={`font-serif text-lg font-bold ${
-                  isEmpty
-                    ? 'text-stone-500'
-                    : personCount > 7 
-                      ? 'text-red-800' 
-                      : personCount === 7 
-                        ? 'text-green-800'
-                        : 'text-stone-800'
+                  personCount > 7 
+                    ? 'text-red-800' 
+                    : personCount === 7 
+                      ? 'text-green-800'
+                      : 'text-stone-800'
                 }`}>
                   Table {table} ({personCount}/7 personnes) - {tableGuests.length} invité{tableGuests.length > 1 ? 's' : ''}
-                  {isEmpty && <span className="ml-2 text-stone-400 text-sm font-normal italic">(Vide)</span>}
                   {personCount > 7 && <span className="ml-2 text-red-600">⚠️ Table pleine !</span>}
                 </h3>
               </div>
-              {isEmpty ? (
-                <div className="bg-stone-50 border border-stone-200 rounded-lg p-8 text-center">
-                  <p className="text-stone-400 italic text-sm">Aucun invité assigné à cette table</p>
-                </div>
-              ) : (
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-[#A69382] text-[10px] uppercase tracking-[0.3em] font-bold">
@@ -820,10 +810,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                   ))}
                 </tbody>
               </table>
-              )}
             </div>
-            );
-          })}
+          ))}
 
           {/* Afficher les invités sans table */}
           {groupedGuests.noTable.length > 0 && (
@@ -864,7 +852,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isLoggedIn }) => {
                             className="w-20 px-2 py-1 text-sm border border-stone-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
                           >
                             <option value="">-</option>
-                            {Array.from({ length: 22 }, (_, i) => i + 1).map(num => (
+                            {Array.from({ length: 30 }, (_, i) => i + 1).map(num => (
                               <option key={num} value={num}>Table {num}</option>
                             ))}
                           </select>
